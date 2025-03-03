@@ -9,10 +9,7 @@
         <label for="phoneNumber" class="form-label">Phone Number</label>
         <input type="text" class="form-control" v-model="userInfo.phoneNumber" required />
       </div>
-      <div class="mb-3">
-        <label for="address" class="form-label">Address</label>
-        <input type="text" class="form-control" v-model="userInfo.address" required />
-      </div>
+     
       <div class="mb-3">
         <label for="city" class="form-label">City</label>
         <input type="text" class="form-control" v-model="userInfo.city" required />
@@ -49,6 +46,10 @@
           </option>
         </select>
       </div>
+      <div class="mb-3" style="display: none;">
+        <label for="address" class="form-label">Address</label>
+        <input type="text" class="form-control" v-model="userInfo.address" required />
+      </div>
 
       <button
         type="submit"
@@ -65,26 +66,34 @@
         <h6>{{ item.productName }}</h6>
         <p>Quantity: {{ item.quantity }}</p>
         <p>Price: ${{ item.price }}</p>
-        <p>Total: ${{ (item.price * item.quantity).toFixed(2) }}</p>
+        <p>Bill total: ${{ (item.price * item.quantity).toFixed(2) }}</p>
       </div>
       <div class="d-flex justify-content-between">
-        <h5>Total:</h5>
+        <h5>Bill total:</h5>
         <h5>${{ total.toFixed(2) }}</h5>
       </div>
       <div class="d-flex justify-content-between">
         <h5>Shipping:</h5>
-        <h5 v-if="shippingPrice !== null">{{ shippingPrice }} $</h5>
+        <h5 v-if="shippingPrice !== null">${{ shippingPrice }}</h5>
       </div>
       <div class="mb-3">
         <label for="couponCode" class="form-label">Coupon Code</label>
         <input type="text" class="form-control" v-model="selectedCouponCode" required />
         <div v-if="selectedCoupon">
-        <p>{{ selectedCoupon.couponDescription }}</p>
+          <p>{{ selectedCoupon.couponDescription }}</p>
+          <div class="d-flex justify-content-between">
+          <h5>Total total:</h5>
+          <h5>${{ newTotal }} </h5>
+        </div>
         </div>
         <div v-else>
-        <p>No Coupon Code Available</p>
+          <p>No Coupon Code Available</p>
+          <div class="d-flex justify-content-between">
+          <h5>Total total:</h5>
+          <h5>${{ newTotal = parseFloat(total.toFixed(2)) + parseFloat(shippingPrice)}} </h5>
         </div>
-
+        </div>
+      
         <button
           type="button"
           class="btn btn-primary btn-block btn-lg"
@@ -94,8 +103,6 @@
           Check Coupon
         </button>
       </div>
-
-  
 
       <button
         type="button"
@@ -160,6 +167,7 @@ export default {
     const coupons = ref([]);
     const selectedCouponCode = ref("");
     const selectedCoupon = ref(null);
+    const newTotal = ref(0);
 
     const fetchCoupons = async () => {
       try {
@@ -173,11 +181,7 @@ export default {
         console.error("Error fetching coupons:", error);
       }
     };
-    const checkCoupon = () => {
-      selectedCoupon.value =
-        coupons.value.find((c) => c.couponCode === selectedCouponCode.value) || null;
-    };
-    // Fetch locations
+
     const fetchProvinces = async () => {
       try {
         const response = await fetch("https://esgoo.net/api-tinhthanh/1/0.htm");
@@ -218,7 +222,6 @@ export default {
         }
       }
     });
-
     watch([selectedProvince, selectedDistrict, selectedWard], () => {
       const province =
         provinces.value.find((p) => p.id === selectedProvince.value)?.full_name || "";
@@ -238,17 +241,85 @@ export default {
       },
       { deep: true },
     );
+    const checkCoupon = async () => {
+      selectedCoupon.value =
+        coupons.value.find((c) => c.couponCode === selectedCouponCode.value) || null;
 
-    onMounted(() => {
-      const cartData = localStorage.getItem("cart");
-      const totalData = localStorage.getItem("total");
-      if (cartData && totalData) {
-        cart.value = JSON.parse(cartData);
-        total.value = parseFloat(totalData);
+      if (!selectedCoupon.value || !selectedCoupon.value.couponId) {
+        alert("Please enter a valid coupon code.");
+        return;
       }
-      fetchCoupons();
-      fetchProvinces();
-    });
+
+      const totalAmount = total.value ? Math.round(total.value) : 0;
+      const shippingAmount = shippingPrice.value ? parseFloat(shippingPrice.value) : 0;
+
+      const moneyDouble = totalAmount + shippingAmount;
+      const requestData = {
+        money: moneyDouble,
+        couponId: selectedCoupon.value.couponId,
+      };
+
+      console.log("Sending request:", requestData);
+
+      try {
+        const response = await fetch("https://localhost:7229/api/CouponModel/ApplyDiscount", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestData),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          newTotal.value = data.newTotal.toFixed(2).toString();
+        } else {
+          alert("Failed to apply the coupon.");
+        }
+      } catch (error) {
+        console.error("Error during coupon validation:", error);
+        alert("An error occurred while applying the coupon.");
+      }
+    };
+
+    const createPaymentByCOD = async () => {
+      try {
+        const response = await fetch("https://localhost:7229/PaymentAPI/CreatePaymentCOD", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: new Date().getTime().toString(),
+            orderDate: new Date().toISOString(),
+            totalAmount: newTotal.value.toString(),
+            paymentMethod: "COD",
+            productId: cart.value.map((item) => item.productId).join(","),
+            quantity: cart.value.reduce((sum, item) => sum + item.quantity, 0),
+            unitPrice: cart.value.reduce((sum, item) => sum + item.price, 0),
+          }),
+        });
+        const textResponse = await response.json();
+        console.log("Server response:", textResponse);
+        router.push({
+          name: "CallBack",
+          query: {
+            orderId: textResponse.result.orderId,
+            userId: textResponse.result.userId,
+            amount:newTotal.value.toString(),
+            payType: textResponse.result.paymentMethod,
+            status: textResponse.isSuccess ? "success" : "failed",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(textResponse);
+        }
+      } catch (error) {
+        console.error("Error creating payment:", error);
+      }
+    };
     const createPayment = async () => {
       try {
         const response = await fetch("https://localhost:7229/PaymentAPI/CreatePaymentMomo", {
@@ -258,9 +329,9 @@ export default {
           },
           body: JSON.stringify({
             FullName: userInfo.value.FullName,
-            OrderId: new Date().getTime().toString(),
+            OrderId: new Date().getTime().toFixed(2),
             Orderinformation: "Your order",
-            Amount: Math.round(total.value * 25545) + +shippingPrice.value,
+            Amount: coupons.value,
           }),
         });
 
@@ -277,44 +348,16 @@ export default {
         console.error("Error creating payment:", error);
       }
     };
-    const createPaymentByCOD = async () => {
-      try {
-        const response = await fetch("https://localhost:7229/PaymentAPI/CreatePaymentCOD", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId: new Date().getTime().toString(),
-            orderDate: new Date().toISOString(),
-            totalAmount: Math.round(total.value * 25545).toString() + +shippingPrice.value,
-            paymentMethod: "COD",
-            productId: cart.value.map((item) => item.productId).join(","),
-            quantity: cart.value.reduce((sum, item) => sum + item.quantity, 0),
-            unitPrice: cart.value.reduce((sum, item) => sum + item.price, 0),
-          }),
-        });
-        const textResponse = await response.json();
-        console.log("Server response:", textResponse);
-        router.push({
-          name: "CallBack",
-          query: {
-            orderId: textResponse.result.orderId,
-            userId: textResponse.result.userId,
-            amount: textResponse.result.totalAmount + shippingPrice.value,
-            payType: textResponse.result.paymentMethod,
-            status: textResponse.isSuccess ? "success" : "failed",
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(textResponse);
-        }
-      } catch (error) {
-        console.error("Error creating payment:", error);
+    onMounted(() => {
+      const cartData = localStorage.getItem("cart");
+      const totalData = localStorage.getItem("total");
+      if (cartData && totalData) {
+        cart.value = JSON.parse(cartData);
+        total.value = parseFloat(totalData);
       }
-    };
-
+      fetchCoupons();
+      fetchProvinces();
+    });
     return {
       selectedCouponCode,
       selectedCoupon,
@@ -331,6 +374,7 @@ export default {
       createPayment,
       createPaymentByCOD,
       shippingPrice,
+      newTotal,
     };
   },
 };
