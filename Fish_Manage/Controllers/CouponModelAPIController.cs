@@ -18,13 +18,19 @@ namespace Fish_Manage.Controllers
         private readonly ICouponModelRepository _couponModelRepository;
         private readonly APIResponse _response;
         private readonly IMapper _mapper;
+        private readonly IOrderRepository _dbOrder;
+        private readonly IEmailSender _emailSender;
+        private readonly IUserRepository _userRepository;
 
-        public CouponModelAPIController(FishManageContext context, ICouponModelRepository couponModelRepository, IMapper mapper)
+        public CouponModelAPIController(FishManageContext context, ICouponModelRepository couponModelRepository, IMapper mapper, IOrderRepository dbOrder, IEmailSender emailSender, IUserRepository userRepository)
         {
             _context = context;
             _couponModelRepository = couponModelRepository;
+            _dbOrder = dbOrder;
             _mapper = mapper;
             _response = new APIResponse();
+            _emailSender = emailSender;
+            _userRepository = userRepository;
         }
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -106,7 +112,7 @@ namespace Fish_Manage.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [HttpDelete("{id:int}", Name = "DeleteCoupon")]
+        [HttpDelete("{id}", Name = "DeleteCoupon")]
         public async Task<ActionResult<APIResponse>> DeleteOrder(string id)
         {
             try
@@ -134,7 +140,7 @@ namespace Fish_Manage.Controllers
             return _response;
         }
         [Authorize(Roles = "admin")]
-        [HttpPut("{id:int}", Name = "UpdateCoupon")]
+        [HttpPut("{id}", Name = "UpdateCoupon")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<APIResponse>> UpdateOrder(string id, [FromBody] CouponModelUpdateDTO updateCoupon)
@@ -161,5 +167,44 @@ namespace Fish_Manage.Controllers
             }
             return _response;
         }
+        [HttpPost("ApplyDiscount")]
+        public async Task<IActionResult> ApplyDiscount([FromBody] ApplyDiscountRequest request)
+        {
+            if (request == null || string.IsNullOrEmpty(request.CouponId))
+            {
+                return BadRequest(new { message = "The couponId field is required." });
+            }
+
+            var result = await _couponModelRepository.ApplyDiscount(request.Money, request.CouponId);
+
+            return Ok(result);
+        }
+
+
+        [HttpPost("FirstCoupon")]
+        public async Task<IActionResult> SendMailFirstCoupon([FromBody] CouponRequestDTO request)
+        {
+            if (request == null || string.IsNullOrEmpty(request.Email))
+            {
+                return BadRequest(new { message = "Invalid request. Email is required." });
+            }
+
+            var user = await _userRepository.GetAsync(u => u.Email == request.Email);
+            if (user != null)
+            {
+                return BadRequest(new { message = "User has already received the first coupon." });
+            }
+
+            try
+            {
+                await _emailSender.SendEmailAsync(request.Email, request.Subject, request.Message);
+                return Ok(new { message = "Coupon sent successfully!" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Failed to send email.", error = ex.Message });
+            }
+        }
+
     }
 }

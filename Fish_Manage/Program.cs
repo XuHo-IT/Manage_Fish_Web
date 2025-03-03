@@ -41,6 +41,9 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IPaymentCODService, PaymentCODService>();
 builder.Services.AddScoped<ICouponModelRepository, CouponModelRepository>();
 
+//Mail
+builder.Services.AddTransient<IEmailSender, EmailSender>();
+
 //Cloudinary
 builder.Services.AddSingleton<CloudinaryService>();
 

@@ -15,9 +15,6 @@ namespace Fish_Manage.Models
         public DateTime DateStart { get; set; }
         public DateTime DateExpired { get; set; }
         [Required]
-        public decimal CouponPrice { get; set; }
-        [Required]
         public int Quantity { get; set; }
-        public int Status { get; set; }
     }
 }

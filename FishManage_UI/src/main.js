@@ -9,6 +9,8 @@ import TotalReport from "./UI/TotalReport.vue";
 import RecentOrder from "./UI/RecentOrder.vue";
 import CreateCoupon from "./UI/CreateCoupon.vue";
 import ViewResponse from "./UI/View_Response.vue";
+import MailFirstCoupon from "./UI/MailFirstCoupon.vue";
+import NewList from "./UI/NewList.vue";
 import VueApexCharts from "vue3-apexcharts";
 import router from "./router";
 
@@ -46,3 +48,9 @@ viewResponse.mount("#view-response");
 
 const createCoupon = createApp(CreateCoupon);
 createCoupon.mount("#create-coupon");
+
+const newList = createApp(NewList);
+newList.mount("#new-list");
+
+const mailFirstCoupon = createApp(MailFirstCoupon);
+mailFirstCoupon.mount("#mailCoupon");
