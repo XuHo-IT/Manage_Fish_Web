@@ -17,17 +17,6 @@
             />
             <button @click="generateCouponCode">Generate Code</button>
           </div>
-          <div>
-            <label for="couponPrice" class="formbold-form-label">CouponPrice</label>
-            <input
-              type="number"
-              name="couponPrice"
-              id="couponPrice"
-              class="formbold-form-input"
-              v-model="newCoupon.couponPrice"
-              required
-            />
-          </div>
         </div>
 
         <div class="formbold-input-flex">
@@ -39,20 +28,6 @@
               id="couponDescription"
               class="formbold-form-input"
               v-model="newCoupon.couponDescription"
-              required
-            />
-          </div>
-        </div>
-
-        <div class="formbold-input-flex">
-          <div>
-            <label for="status" class="formbold-form-label">Status</label>
-            <input
-              type="number"
-              name="status"
-              id="status"
-              class="formbold-form-input"
-              v-model="newCoupon.status"
               required
             />
           </div>
@@ -122,11 +97,9 @@ export default {
     return {
       newCoupon: {
         couponCode: "",
-        couponPrice: null,
         couponDescription: "",
         description: "",
         quantity: null,
-        status: null,
         dateStart: null,
         dateEnd: null,
       },
@@ -134,17 +107,14 @@ export default {
   },
   methods: {
     async createCoupon() {
-      //FormData is typically used for file uploads, 
+      //FormData is typically used for file uploads,
       //   const formData = new FormData();
       //   formData.append("ProductCode", this.newCoupon.ProductCode);
 
-
       const formData = {
         couponCode: this.newCoupon.couponCode,
-        couponPrice: this.newCoupon.couponPrice,
         couponDescription: this.newCoupon.couponDescription,
         quantity: this.newCoupon.quantity,
-        status: this.newCoupon.status,
         dateStart: this.newCoupon.dateStart,
         dateEnd: this.newCoupon.dateEnd,
       };
