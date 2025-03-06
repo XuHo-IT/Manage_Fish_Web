@@ -18,6 +18,7 @@ namespace Fish_Manage.Models.DTO.Product
 
         public string Supplier { get; set; }
         public string ImageURl { get; set; }
+        public int Quantity { get; set; }
 
     }
 }

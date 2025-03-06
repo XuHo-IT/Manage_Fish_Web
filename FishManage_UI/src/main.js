@@ -2,11 +2,11 @@ import { createApp } from "vue";
 import App from "./App.vue";
 import ProductList from "./UI/ProductList.vue";
 import AuthModal from "./UI/AuthModal.vue";
-import ResetPass from "./UI/ResetPassWord.vue";
+import ResetPass from "./UI/ResetPassword.vue";
 import ForgetPass from "./UI/ForgetPass.vue";
 import CreateProduct from "./UI/CreateProduct.vue";
 import EditProduct from "./UI/EditProduct.vue";
-import Checkout from "./UI/Checkout.vue";
+import Checkout from "./UI/CheckOut.vue";
 import TotalReport from "./UI/TotalReport.vue";
 import RecentOrder from "./UI/RecentOrder.vue";
 import CreateCoupon from "./UI/CreateCoupon.vue";
@@ -15,7 +15,7 @@ import MailFirstCoupon from "./UI/MailFirstCoupon.vue";
 import NewList from "./UI/NewList.vue";
 import VueApexCharts from "vue3-apexcharts";
 import ButtonLogin from "./UI/ButtonLogin.vue";
-import router from "./router";
+import router from "./router/index.js";
 import store from "./js/store.js"; 
 
 

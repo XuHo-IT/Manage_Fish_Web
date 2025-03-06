@@ -3,6 +3,7 @@ using Fish_Manage.Models;
 using Fish_Manage.Models.DTO.Order;
 using Fish_Manage.Models.Momo;
 using Fish_Manage.Repository.DTO;
+using Fish_Manage.Repository.IRepository;
 using Fish_Manage.Service.IService;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -17,16 +18,18 @@ namespace Fish_Manage.Controllers
         private readonly FishManageContext _db;
         protected APIResponse _response;
         private readonly IMomoService _momoService;
+        private readonly IProductRepository _productRepository;
         private readonly IPaymentCODService _paymentCODService;
         private readonly IMapper _mapper;
 
-        public PaymentAPIController(IMomoService momoService, FishManageContext db, IPaymentCODService paymentCODService, IMapper mapper)
+        public PaymentAPIController(FishManageContext db, APIResponse response, IMomoService momoService, IProductRepository productRepository, IPaymentCODService paymentCODService, IMapper mapper)
         {
-            _momoService = momoService;
             _db = db;
+            _response = new APIResponse();
+            _momoService = momoService;
+            _productRepository = productRepository;
             _paymentCODService = paymentCODService;
             _mapper = mapper;
-            _response = new APIResponse();
         }
 
         [HttpPost("CreatePaymentMomo")]
@@ -78,6 +81,13 @@ namespace Fish_Manage.Controllers
                 Order order = _mapper.Map<Order>(createDTO);
                 await _paymentCODService.CreateAsync(order);
 
+                var product = await _productRepository.GetByIdAsync(order.ProductId);
+
+                if (product != null && product.Quantity > 0)
+                {
+                    product.Quantity -= createDTO.Quantity;
+                    await _productRepository.UpdateAsync(product);
+                }
                 _response.Result = _mapper.Map<OrderDTO>(order);
                 _response.StatusCode = HttpStatusCode.Created;
 

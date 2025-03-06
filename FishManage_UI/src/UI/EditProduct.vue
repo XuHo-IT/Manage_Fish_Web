@@ -4,7 +4,7 @@
       <form @submit.prevent="editProduct">
         <h2 class="formbold-form-title">Edit product</h2>
 
-        <div class="formbold-input-flex">
+        <div>
           <div>
             <label for="productName" class="formbold-form-label">Product Name</label>
             <input
@@ -16,10 +16,13 @@
               required
             />
           </div>
+        </div>
+
+        <div>
           <div>
             <label for="price" class="formbold-form-label">Price</label>
             <input
-              type="number"
+              type="double"
               name="price"
               id="price"
               class="formbold-form-input"
@@ -29,7 +32,21 @@
           </div>
         </div>
 
-        <div class="formbold-input-flex">
+        <div>
+          <div>
+            <label for="price" class="formbold-form-label">Quantity</label>
+            <input
+              type="number"
+              name="quantity"
+              id="quantity"
+              class="formbold-form-input"
+              v-model="product.quantity"
+              required
+            />
+          </div>
+        </div>
+
+        <div>
           <div>
             <label for="category" class="formbold-form-label">Category</label>
             <input
@@ -43,7 +60,7 @@
           </div>
         </div>
 
-        <div class="formbold-input-flex">
+        <div>
           <div>
             <label for="description" class="formbold-form-label">Description</label>
             <input
@@ -57,7 +74,7 @@
           </div>
         </div>
 
-        <div class="formbold-input-flex">
+        <div>
           <div>
             <label for="supplier" class="formbold-form-label">Supplier</label>
             <input
@@ -115,12 +132,17 @@ export default {
   data() {
     return {
       imageFile: null,
+      oldImageFile: this.product.imageURl,
     };
   },
   methods: {
     handleFileUploadUpdate(event) {
-      this.imageFile = event.target.files[0];
-      console.log(this.imageFile);
+      const selectedFile = event.target.files[0];
+      if (selectedFile) {
+        this.imageFile = selectedFile;
+      } else if (!this.imageFile) {
+        this.imageFile = this.oldImageFile;
+      }
     },
 
     async editProduct() {
@@ -134,26 +156,26 @@ export default {
       formData.append("ProductName", this.product.productName);
       formData.append("Price", this.product.price);
       formData.append("Category", this.product.category);
+      formData.append("Quantity", this.product.quantity);
       formData.append("Description", this.product.description);
       formData.append("Supplier", this.product.supplier);
 
-      // Always append imageFile to avoid validation errors
       if (this.imageFile) {
-        formData.append("imageFile", this.imageFile);
-      }
+        formData.append("imageFile", this.imageFile); 
+      } 
       try {
         const response = await axios.put(
           `https://localhost:7229/api/FishProductAPI/${this.product.productId}`,
           formData,
           {
             headers: {
-              "Content-Type": "multipart/form-data", // ✅ Fixes 415 error
+              "Content-Type": "multipart/form-data",
             },
           },
         );
-
         alert("Product updated successfully!");
         console.log("Product updated successfully:", response.data);
+        
       } catch (error) {
         alert("Error updating product!");
         console.error("Error updating product:", error.response ? error.response.data : error);

@@ -1,8 +1,7 @@
 <template>
   <div>
     <div class="search-bar row bg-light p-2 rounded-4">
-      <div class="col-md-4 d-none d-md-block">
-      </div>
+      <div class="col-md-4 d-none d-md-block"></div>
       <div class="col-11 col-md-7">
         <form id="search-form" class="text-center" action="index.html" method="post">
           <input
@@ -14,7 +13,13 @@
         </form>
       </div>
       <div class="col-1">
-        <svg @click="handleSearch" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+        <svg
+          @click="handleSearch"
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+        >
           <path
             fill="currentColor"
             d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0a1 1 0 0 0 0-1.39ZM11 18a7 7 0 1 1 7-7a7 7 0 0 1-7 7Z"
@@ -134,16 +139,15 @@
                       </div>
                       <div class="button-area p-3 pt-0">
                         <div class="row g-1 mt-2">
-                          <div class="col-3">
-                            <input
-                              type="number"
-                              class="form-control border-dark-subtle input-number quantity"
-                              v-model.number="product.quantity"
-                              min="0"
-                              value="0"
-                              placeholder="0"
-                            />
-                          </div>
+                          <input
+                            type="number"
+                            class="form-control border-dark-subtle input-number quantity"
+                            v-model.number="quantities[product.productId]"
+                            min="0"
+                            value="0"
+                            placeholder="0"
+                          />
+
                           <div class="col-7">
                             <button
                               @click="addToCart(product)"
@@ -213,14 +217,14 @@ const minPrice = ref(0);
 const maxPrice = ref(100);
 const sortOrder = ref("default");
 const products = ref([]);
-
+const quantities = ref({});
 const isModalVisible = ref(false);
 const isCartVisible = ref(false);
 const isEditMode = ref(false);
 const currentProduct = ref(null);
 const api = "https://localhost:7229/api/FishProductAPI";
 const cart = ref([]);
-const  searchTerm = ref([]);
+const searchTerm = ref([]);
 // Import and initialize useRouter correctly
 const router = useRouter();
 
@@ -247,18 +251,26 @@ onMounted(() => {
 });
 
 const addToCart = (product) => {
-  if (product.quantity === 0 || product.quantity === "" || product.quantity == null) {
-    alert("Product quantity have not selected yet!");
+  const quantity = quantities.value[product.productId] || 0;
+  if (quantity<0) {
+    alert("Please select a valid product quantity!");
     return;
   }
+
   const existingProduct = cart.value.find((item) => item.productId === product.productId);
 
   if (existingProduct) {
-    existingProduct.quantity += product.quantity;
+    existingProduct.quantity -= quantity;
   } else {
-    cart.value.push({ ...product, quantity: product.quantity });
-    alert("Product have been selected ! You can check your cart now");
+    cart.value.push({
+      ...product,
+      quantity: quantity,
+    });
+
+    alert("Product has been added to your cart!");
   }
+
+  quantities.value[product.productId] =0;
 };
 
 const cartTotal = computed(() => {
@@ -298,9 +310,9 @@ const fetchSortedProducts = () => {
     case "newest":
       apiUrl = `https://localhost:7229/api/FishProductAPI/GetProductNewest?min=${minPrice.value}&max=${maxPrice.value}&searchTerm=${searchTerm.value}`;
       break;
-  };
+  }
 
-  console.log("Fetching data from:", apiUrl); 
+  console.log("Fetching data from:", apiUrl);
 
   axios
     .get(apiUrl)
