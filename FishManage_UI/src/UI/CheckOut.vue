@@ -9,7 +9,7 @@
         <label for="phoneNumber" class="form-label">Phone Number</label>
         <input type="text" class="form-control" v-model="userInfo.phoneNumber" required />
       </div>
-     
+
       <div class="mb-3">
         <label for="city" class="form-label">City</label>
         <input type="text" class="form-control" v-model="userInfo.city" required />
@@ -46,7 +46,7 @@
           </option>
         </select>
       </div>
-      <div class="mb-3" style="display: none;">
+      <div class="mb-3" style="display: none">
         <label for="address" class="form-label">Address</label>
         <input type="text" class="form-control" v-model="userInfo.address" required />
       </div>
@@ -82,18 +82,18 @@
         <div v-if="selectedCoupon">
           <p>{{ selectedCoupon.couponDescription }}</p>
           <div class="d-flex justify-content-between">
-          <h5>Total total:</h5>
-          <h5>${{ newTotal }} </h5>
-        </div>
+            <h5>Total total:</h5>
+            <h5>${{ newTotal }}</h5>
+          </div>
         </div>
         <div v-else>
           <p>No Coupon Code Available</p>
           <div class="d-flex justify-content-between">
-          <h5>Total total:</h5>
-          <h5>${{ newTotal = parseFloat(total.toFixed(2)) + parseFloat(shippingPrice)}} </h5>
+            <h5>Total total:</h5>
+            <h5>${{ newTotal = parseFloat(total.toFixed(2)) + parseFloat(shippingPrice) }}</h5>
+          </div>
         </div>
-        </div>
-      
+
         <button
           type="button"
           class="btn btn-primary btn-block btn-lg"
@@ -146,14 +146,14 @@ const userId = ref(null);
 const loadAuthState = () => {
   const params = new URLSearchParams(window.location.search);
 
-  const token = params.get("token"); 
+  const token = params.get("token");
   const userIdParam = params.get("userId");
   const role = params.get("isAdmin");
 
   console.log("URL Params:", { token, userIdParam, role });
   if (userIdParam) userId.value = userIdParam;
   isAuthenticated.value = params.get("isAuthenticated") === "true";
-  isAdmin.value = role === "true"; 
+  isAdmin.value = role === "true";
 };
 export default {
   name: "Checkout",
@@ -306,7 +306,7 @@ export default {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            userId: new Date().getTime().toString(),
+            userId: localStorage.getItem("userId") || new Date().getTime().toString(),
             orderDate: new Date().toISOString(),
             totalAmount: newTotal.value.toString(),
             paymentMethod: "COD",
@@ -322,7 +322,7 @@ export default {
           query: {
             orderId: textResponse.result.orderId,
             userId: textResponse.result.userId,
-            amount:newTotal.value.toString(),
+            amount: newTotal.value.toString(),
             payType: textResponse.result.paymentMethod,
             status: textResponse.isSuccess ? "success" : "failed",
           },

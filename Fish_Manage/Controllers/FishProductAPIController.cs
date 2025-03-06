@@ -248,7 +248,7 @@ namespace Fish_Manage.Controllers
         public async Task<ActionResult<APIResponse>> UpdateProduct(
         string id,
         [FromForm] ProductUpdateDTO updateDTO,
-        IFormFile imageFile,
+        IFormFile? imageFile,
         [FromServices] CloudinaryService cloudinaryService)
         {
             try
@@ -273,14 +273,15 @@ namespace Fish_Manage.Controllers
                         ErrorMessages = new List<string> { "Product not found." }
                     });
                 }
+                string finalImageUrl = existingProduct.ImageURl;
 
-                string imageUrl = existingProduct.ImageURl;
-                if (imageFile != null)
+                if (imageFile != null && imageFile.Length > 0)
                 {
-                    imageUrl = await cloudinaryService.UploadImageAsync(imageFile);
+                    finalImageUrl = await cloudinaryService.UploadImageAsync(imageFile);
                 }
+
                 _mapper.Map(updateDTO, existingProduct);
-                existingProduct.ImageURl = imageUrl;
+                existingProduct.ImageURl = finalImageUrl;
 
                 await _dbProduct.UpdateAsync(existingProduct);
                 _response.Result = _mapper.Map<ProductDTO>(existingProduct);

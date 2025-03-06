@@ -2,7 +2,7 @@
   <div>
     <div v-if="isLogin" @submit.prevent="handleLogin">
       <div class="limiter">
-        <div class="container-login100" style="background-image: url(&quot;images/bg-01.jpg&quot;)">
+        <div class="container-login100" style="background-image: url(&quot;images/fish_back.gif&quot;)">
           <div class="wrap-login100 p-l-110 p-r-110 p-t-62 p-b-33">
             <form class="login100-form validate-form flex-sb flex-w">
               <span class="login100-form-title p-b-53"> Sign With </span>
@@ -196,16 +196,13 @@ export default {
           this.isAuthenticated = !!token;
           this.userId = user.id;
 
-          alert("Login Success:", { userId: this.userId, isAdmin: this.isAdmin });
-
-          // Construct URL
           const queryParams = new URLSearchParams({
             userId: encodeURIComponent(this.userId),
             isAdmin: this.isAdmin.toString(),
             isAuthenticated: this.isAuthenticated.toString(),
           }).toString();
 
-          // Update URL and reload
+
           window.history.pushState({}, "", `../?${queryParams}`);
           this.closeModal();
           window.location.reload();
@@ -218,19 +215,6 @@ export default {
           error.response?.data?.errorMessages?.[0] || "An error occurred during login";
       }
     },
-
-    // async handleLogin() {
-    //   try {
-    //     const response = await api.post("../UserAuth/login", this.loginData);
-    //     const { token, user, role } = response.data.result;
-
-    //     this.$store.commit("login", { token, user, role });
-
-    //     window.location.href = `../?userId=${user.id}`;
-    //   } catch (error) {
-    //     this.errorMessage = error.response?.data?.errorMessages?.[0] || "An error occurred";
-    //   }
-    // },
 
     async handleRegister() {
   try {
@@ -245,18 +229,14 @@ export default {
     console.log("Sending payload:", payload);
 
     const response = await api.post("/register", payload);
-    const data = response.data; // Extract response data
+    const data = response.data; 
 
-    // Show success alert
     alert("Registration successful! Redirecting...");
 
-    // Redirect after alert
     window.location.href = `https://localhost:5173/?userId=${encodeURIComponent(data.userId)}&isAuthenticated=true&isAdmin=false`;
 
-    // Clear form fields
     this.clearForm();
   } catch (error) {
-    // Show error alert if registration fails
     this.errorMessage = error.response?.data?.errorMessages?.[0] || "An error occurred";
     alert(this.errorMessage);
   }

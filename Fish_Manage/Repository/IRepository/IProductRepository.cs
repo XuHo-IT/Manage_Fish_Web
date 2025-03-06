@@ -11,5 +11,7 @@ namespace Fish_Manage.Repository.IRepository
         Task<List<Product>> GetProductOldest(decimal minRange, decimal maxRange);
         Task<List<Product>> GetProductInRange(decimal minRange, decimal maxRange);
 
+        int? GetQuantity(string id);
+        Task<Product> GetByIdAsync(string id);
     }
 }

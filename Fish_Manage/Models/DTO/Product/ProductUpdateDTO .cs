@@ -15,6 +15,7 @@ namespace Fish_Manage.Models.DTO.Product
         public string Description { get; set; }
 
         public string Supplier { get; set; }
+        public int Quantity { get; set; }
 
     }
 }
