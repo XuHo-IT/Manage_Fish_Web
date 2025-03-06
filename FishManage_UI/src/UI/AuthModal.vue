@@ -1,127 +1,145 @@
 <template>
   <div>
-    <li v-if="!isAuthenticated">
-      <a href="#" @click="openModal" class="p-2 mx-1">
-        <svg width="30" height="30" class="text-gray-600 hover:text-blue-500">
-          <use xlink:href="#user"></use>
-        </svg>
-      </a>
-    </li>
-    <li v-if="isAuthenticated">
-      <a href="#" @click="dashboard" class="p-2 mx-1">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
-          <path
-            d="M151.6 42.4C145.5 35.8 137 32 128 32s-17.5 3.8-23.6 10.4l-88 96c-11.9 13-11.1 33.3 2 45.2s33.3 11.1 45.2-2L96 146.3 96 448c0 17.7 14.3 32 32 32s32-14.3 32-32l0-301.7 32.4 35.4c11.9 13 32.2 13.9 45.2 2s13.9-32.2 2-45.2l-88-96zM320 480l32 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-32 0c-17.7 0-32 14.3-32 32s14.3 32 32 32zm0-128l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0c-17.7 0-32 14.3-32 32s14.3 32 32 32zm0-128l160 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-160 0c-17.7 0-32 14.3-32 32s14.3 32 32 32zm0-128l224 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32z"
-          />
-        </svg>
-      </a>
-    </li>
-    <li v-if="isAuthenticated" class="p-2 mx-1">
-      <a href="#" @click="logout" class="p-2 mx-1">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-          <path
-            d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z"
-          />
-        </svg>
-      </a>
-    </li>
+    <div v-if="isLogin" @submit.prevent="handleLogin">
+      <div class="limiter">
+        <div class="container-login100" style="background-image: url(&quot;images/bg-01.jpg&quot;)">
+          <div class="wrap-login100 p-l-110 p-r-110 p-t-62 p-b-33">
+            <form class="login100-form validate-form flex-sb flex-w">
+              <span class="login100-form-title p-b-53"> Sign With </span>
 
-    <div
-      v-if="showModal"
-      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
-    >
-      <div class="bg-white p-6 rounded-lg shadow-lg w-96 relative">
-        <button
-          @click="closeModal"
-          class="absolute top-2 right-2 text-gray-500 hover:text-red-500 text-2xl"
-        >
-          &times;
-        </button>
+              <a href="#" class="btn-face m-b-20" @click.prevent="socialLogin('facebook')">
+                <i class="fa fa-facebook-official"></i>
+                Facebook
+              </a>
 
-        <!-- Tabs -->
-        <div class="flex mb-4">
-          <button
-            @click="isLogin = true"
-            :class="{ 'border-blue-500': isLogin }"
-            class="w-1/2 py-2 text-center border-b-2 font-semibold"
-          >
-            Login
-          </button>
-          <button
-            @click="isLogin = false"
-            :class="{ 'border-blue-500': !isLogin }"
-            class="w-1/2 py-2 text-center border-b-2 font-semibold"
-          >
-            Register
-          </button>
+              <a href="#" class="btn-google m-b-20" @click="socialLogin('google')">
+                <img src="/Login/images/icons/icon-google.png" alt="GOOGLE" />
+                Google
+              </a>
+
+              <div class="p-t-31 p-b-9">
+                <span class="txt1"> Username </span>
+              </div>
+              <div class="wrap-input100 validate-input" data-validate="Username is required">
+                <input
+                  v-model="loginData.userName"
+                  type="text"
+                  placeholder="Username"
+                  class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300"
+                  required
+                />
+                <span class="focus-input100"></span>
+              </div>
+
+              <div class="p-t-13 p-b-9">
+                <span class="txt1"> Password </span>
+
+                <a href="/Login/ForgotPass.html" class="txt2 bo1 m-l-5"> Forgot? </a>
+              </div>
+              <div class="wrap-input100 validate-input" data-validate="Password is required">
+                <input
+                  v-model="loginData.password"
+                  type="password"
+                  placeholder="Password"
+                  class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300"
+                  required
+                />
+                <span class="focus-input100"></span>
+              </div>
+
+              <div class="container-login100-form-btn m-t-17">
+                <button type="submit" class="login100-form-btn">Sign In</button>
+              </div>
+
+              <div class="w-full text-center p-t-55">
+                <span class="txt2"> Not a member? </span>
+
+                <a @click="isLogin = false" href="#" class="txt2 bo1"> Sign up now </a>
+              </div>
+            </form>
+          </div>
         </div>
-
-        <!-- Display Errors -->
-        <p v-if="errorMessage" class="text-red-500 text-sm mb-2">{{ errorMessage }}</p>
-
-        <!-- Login Form -->
-        <form v-if="isLogin" @submit.prevent="handleLogin">
-          <input
-            v-model="loginData.userName"
-            type="text"
-            placeholder="Username"
-            class="w-full px-3 py-2 mb-2 border rounded"
-            required
-          />
-          <input
-            v-model="loginData.password"
-            type="password"
-            placeholder="Password"
-            class="w-full px-3 py-2 mb-2 border rounded"
-            required
-          />
-          <button
-            type="submit"
-            class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
-          >
-            Login
-          </button>
-        </form>
-
-        <!-- Register Form -->
-        <form v-else @submit.prevent="handleRegister">
-          <input
-            v-model="registerData.fullName"
-            type="text"
-            placeholder="Full Name"
-            class="w-full px-3 py-2 mb-2 border rounded"
-            required
-          />
-          <input
-            v-model="registerData.userName"
-            type="text"
-            placeholder="Name"
-            class="w-full px-3 py-2 mb-2 border rounded"
-            required
-          />
-          <input
-            v-model="registerData.password"
-            type="password"
-            placeholder="Password"
-            class="w-full px-3 py-2 mb-2 border rounded"
-            required
-          />
-          <button
-            type="submit"
-            class="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600"
-          >
-            Register
-          </button>
-        </form>
       </div>
     </div>
+
+    <div v-else @submit.prevent="handleRegister">
+      <div class="limiter">
+        <div class="container-login100" style="background-image: url(&quot;images/bg-01.jpg&quot;)">
+          <div class="wrap-login100 p-l-110 p-r-110 p-t-62 p-b-33">
+            <form class="login100-form validate-form flex-sb flex-w">
+              <span class="login100-form-title p-b-53"> Sign Up</span>
+              <div class="p-t-31 p-b-9">
+                <span class="txt1"> Email </span>
+              </div>
+              <div class="wrap-input100 validate-input" data-validate="Username is required">
+                <input
+                  v-model="registerData.email"
+                  type="text"
+                  placeholder="Email address"
+                  class="w-full px-3 py-2 border rounded focus:ring focus:ring-green-300"
+                  required
+                />
+                <span class="focus-input100"></span>
+              </div>
+              <div class="p-t-31 p-b-9">
+                <span class="txt1"> Full Name </span>
+              </div>
+              <div class="wrap-input100 validate-input" data-validate="Username is required">
+                <input
+                  v-model="registerData.name"
+                  type="text"
+                  placeholder="Username"
+                  class="w-full px-3 py-2 border rounded focus:ring focus:ring-green-300"
+                  required
+                />
+                <span class="focus-input100"></span>
+              </div>
+              <div class="p-t-31 p-b-9">
+                <span class="txt1"> Username </span>
+              </div>
+              <div class="wrap-input100 validate-input" data-validate="Username is required">
+                <input
+                  v-model="registerData.userName"
+                  type="text"
+                  placeholder="Username"
+                  class="w-full px-3 py-2 border rounded focus:ring focus:ring-green-300"
+                  required
+                />
+                <span class="focus-input100"></span>
+              </div>
+
+              <div class="p-t-13 p-b-9">
+                <span class="txt1"> Password </span>
+                <a href="/Login/ForgotPass.html" class="txt2 bo1 m-l-5"> Forgot? </a>
+              </div>
+              <div class="wrap-input100 validate-input" data-validate="Password is required">
+                <input
+                  v-model="registerData.password"
+                  type="password"
+                  placeholder="Password"
+                  class="w-full px-3 py-2 border rounded focus:ring focus:ring-green-300"
+                  required
+                />
+                <span class="focus-input100"></span>
+              </div>
+              <div class="container-login100-form-btn m-t-17">
+                <button type="submit" class="login100-form-btn">Sign Up</button>
+              </div>
+              <div class="w-full text-center p-t-55">
+                <span class="txt2"> Already a member? </span>
+                <a @click="isLogin = true" href="#" class="txt2 bo1"> Sign in now </a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Registration Form -->
   </div>
 </template>
 
 <script>
 import api from "@/js/api_auth.js"; // Axios instance
-
-
 export default {
   data() {
     return {
@@ -129,11 +147,15 @@ export default {
       isLogin: true, // Toggle between login and register
       isAuthenticated: !!localStorage.getItem("token"),
       isAdmin: false,
+      token: null,
       userId: null,
       loginData: { userName: "", password: "" },
-      registerData: { fullName: "", userName: "", password: "" },
+      registerData: { email: "", name: "", userName: "", password: "" },
       errorMessage: "",
     };
+  },
+  mounted() {
+    this.loadFacebookSDK();
   },
   methods: {
     openModal() {
@@ -146,46 +168,169 @@ export default {
     },
     clearForm() {
       this.loginData = { userName: "", password: "" };
-      this.registerData = { fullName: "", userName: "", password: "" };
+      this.registerData = { email: "", name: "", userName: "", password: "" };
     },
     async handleLogin() {
       try {
         const response = await api.post("/login", this.loginData);
-        localStorage.setItem("token", response.data.result.token);
-        localStorage.setItem("user", JSON.stringify(response.data.result.user)); // Store user information
-        localStorage.setItem("role", response.data.result.role); // Store role information
-        this.isAdmin = response.data.result.role === "admin";
-        this.isAuthenticated = true;
-        this.userId = response.data.result.user.id;
+        console.log("Full API Response:", response.data.result);
 
-        window.history.pushState({}, "", `?userId=${this.userId}`);
-        this.closeModal();
-        window.location.reload();
+        if (response.data.isSuccess && response.data.result) {
+          const { token, user } = response.data.result || {};
+          const role = user?.role?.toLowerCase() || "";
+
+          console.log("Token Received:", token);
+
+          if (!token) {
+            throw new Error("Token is missing from response");
+          }
+
+          // Save authentication details
+          localStorage.setItem("token", token);
+          localStorage.setItem("user", JSON.stringify(user));
+          localStorage.setItem("role", role);
+          localStorage.setItem("userId", user.id);
+
+          // Set component state
+          this.isAdmin = role === "admin";
+          this.isAuthenticated = !!token;
+          this.userId = user.id;
+
+          alert("Login Success:", { userId: this.userId, isAdmin: this.isAdmin });
+
+          // Construct URL
+          const queryParams = new URLSearchParams({
+            userId: encodeURIComponent(this.userId),
+            isAdmin: this.isAdmin.toString(),
+            isAuthenticated: this.isAuthenticated.toString(),
+          }).toString();
+
+          // Update URL and reload
+          window.history.pushState({}, "", `../?${queryParams}`);
+          this.closeModal();
+          window.location.reload();
+        } else {
+          throw new Error(response.data.errorMessages?.[0] || "Invalid login response");
+        }
       } catch (error) {
-        this.errorMessage = error.response?.data?.errorMessages?.[0] || "An error occurred";
+        console.error("Login Error:", error);
+        this.errorMessage =
+          error.response?.data?.errorMessages?.[0] || "An error occurred during login";
       }
     },
+
+    // async handleLogin() {
+    //   try {
+    //     const response = await api.post("../UserAuth/login", this.loginData);
+    //     const { token, user, role } = response.data.result;
+
+    //     this.$store.commit("login", { token, user, role });
+
+    //     window.location.href = `../?userId=${user.id}`;
+    //   } catch (error) {
+    //     this.errorMessage = error.response?.data?.errorMessages?.[0] || "An error occurred";
+    //   }
+    // },
 
     async handleRegister() {
-      try {
-        await api.post("/register", this.registerData);
-        alert("Registration successful! Please log in.");
-        this.isLogin = true;
-        this.clearForm();
-      } catch (error) {
-        this.errorMessage = error.response?.data?.errorMessages?.[0] || "An error occurred";
+  try {
+    const payload = {
+      userName: this.registerData.userName,
+      name: this.registerData.name,
+      password: this.registerData.password,
+      role: "customer",
+      email: this.registerData.email,
+    };
+
+    console.log("Sending payload:", payload);
+
+    const response = await api.post("/register", payload);
+    const data = response.data; // Extract response data
+
+    // Show success alert
+    alert("Registration successful! Redirecting...");
+
+    // Redirect after alert
+    window.location.href = `https://localhost:5173/?userId=${encodeURIComponent(data.userId)}&isAuthenticated=true&isAdmin=false`;
+
+    // Clear form fields
+    this.clearForm();
+  } catch (error) {
+    // Show error alert if registration fails
+    this.errorMessage = error.response?.data?.errorMessages?.[0] || "An error occurred";
+    alert(this.errorMessage);
+  }
+},
+
+
+    loadFacebookSDK() {
+      window.fbAsyncInit = function () {
+        FB.init({
+          appId: "1722472512021344",
+          cookie: true,
+          xfbml: true,
+          version: "v18.0",
+        });
+      };
+
+      if (!document.getElementById("facebook-jssdk")) {
+        let js = document.createElement("script");
+        js.id = "facebook-jssdk";
+        js.src = "https://connect.facebook.net/en_US/sdk.js";
+        document.body.appendChild(js);
       }
     },
-  dashboard(){
-    window.location.href = "/src/dist/dashboard/index.html";
+
+    socialLogin(provider) {
+      if (provider === "facebook") {
+        if (typeof FB === "undefined") {
+          console.error("Facebook SDK not loaded");
+          return;
+        }
+
+        FB.login(
+          (response) => {
+            if (response.authResponse) {
+              let accessToken = response.authResponse.accessToken;
+              console.log(accessToken);
+              this.handleFacebookLogin(accessToken);
+            } else {
+              console.error("Facebook login failed", response);
+            }
+          },
+          { scope: "email,public_profile" },
+        );
+      }
     },
-    logout() {
-      localStorage.removeItem("token");
-      this.isAuthenticated = false;
-      this.isAdmin = false;
-      this.userId = null;
-      window.history.pushState({}, "", "/");
-      window.location.reload();
+
+    async handleFacebookLogin(accessToken) {
+      try {
+        let apiResponse = await fetch("https://localhost:7229/api/User/login-facebook", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ accessToken }),
+        });
+
+        if (!apiResponse.ok) {
+          throw new Error(`HTTP error! Status: ${apiResponse.status}`);
+        }
+
+        let data = await apiResponse.json();
+        console.log("User Data:", data);
+
+        if (data.token) {
+          localStorage.setItem("token", data.token);
+          this.isAuthenticated = true;
+
+          window.location.href = `https://localhost:5173/?userId=${encodeURIComponent(data.userId)}&isAuthenticated=true&isAdmin=${data.isAdmin}`;
+        } else {
+          console.error("Login failed", data);
+        }
+      } catch (error) {
+        console.error("Error logging in with Facebook:", error);
+      }
     },
   },
 };

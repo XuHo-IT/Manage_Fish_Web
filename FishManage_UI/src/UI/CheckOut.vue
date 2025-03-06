@@ -115,7 +115,7 @@
 
       <button type="submit" class="btn btn-primary btn-block btn-lg">Pay By VNPay</button>
       <h6>
-        <a href="http://localhost:5173/">Cancel and return to website</a>
+        <a href="https://localhost:5173/">Cancel and return to website</a>
       </h6>
       <router-view></router-view>
     </div>
@@ -139,7 +139,22 @@
 <script>
 import { ref, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
+const isAuthenticated = ref(false);
+const isAdmin = ref(false);
+const userId = ref(null);
 
+const loadAuthState = () => {
+  const params = new URLSearchParams(window.location.search);
+
+  const token = params.get("token"); 
+  const userIdParam = params.get("userId");
+  const role = params.get("isAdmin");
+
+  console.log("URL Params:", { token, userIdParam, role });
+  if (userIdParam) userId.value = userIdParam;
+  isAuthenticated.value = params.get("isAuthenticated") === "true";
+  isAdmin.value = role === "true"; 
+};
 export default {
   name: "Checkout",
   setup() {
@@ -357,6 +372,7 @@ export default {
       }
       fetchCoupons();
       fetchProvinces();
+      loadAuthState();
     });
     return {
       selectedCouponCode,

@@ -105,6 +105,18 @@ axios.interceptors.request.use(
 );
 
 export default {
+  computed: {
+  isAuthenticated() {
+    return this.$store.state.isAuthenticated;
+  },
+  isAdmin() {
+    return this.$store.state.isAdmin;
+  },
+  userId() {
+    return this.$store.state.userId;
+  }
+},
+
   name: "CreateProduct",
   data() {
     return {

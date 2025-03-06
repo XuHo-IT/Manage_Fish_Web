@@ -28,22 +28,38 @@ namespace Fish_Manage.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<APIResponse>> GetProducts()
+        [HttpGet]
+        public async Task<ActionResult<APIResponse>> GetProducts(string? searchTerm = null)
         {
-            IEnumerable<Product> productList;
-            productList = await _dbProduct.GetAllAsync();
+            IEnumerable<Product> productList = await _dbProduct.GetAllAsync();
+
+            // Apply search filter if searchTerm is provided
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                productList = productList.Where(p =>
+                    p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+            }
+
             _response.Result = _mapper.Map<List<ProductDTO>>(productList);
             _response.StatusCode = HttpStatusCode.OK;
             return Ok(_response);
         }
+
         [HttpGet("GetProductAsc")]
         //[ResponseCache(CacheProfileName = "Default30")]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<APIResponse>> GetProductAsc(decimal min, decimal max)
+        public async Task<ActionResult<APIResponse>> GetProductAsc(decimal min, decimal max, string? searchTerm = null)
         {
             IEnumerable<Product> productList = await _dbProduct.GetProductAsc(min, max);
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                productList = productList.Where(p =>
+                    p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+            }
             _response.Result = _mapper.Map<List<ProductDTO>>(productList);
             _response.StatusCode = HttpStatusCode.OK;
             return Ok(_response);
@@ -53,9 +69,15 @@ namespace Fish_Manage.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<APIResponse>> GetProductDesc(decimal min, decimal max)
+        public async Task<ActionResult<APIResponse>> GetProductDesc(decimal min, decimal max, string? searchTerm = null)
         {
             IEnumerable<Product> productList = await _dbProduct.GetProductDesc(min, max);
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                productList = productList.Where(p =>
+                    p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+            }
             _response.Result = _mapper.Map<List<ProductDTO>>(productList);
             _response.StatusCode = HttpStatusCode.OK;
             return Ok(_response);
@@ -64,9 +86,15 @@ namespace Fish_Manage.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<APIResponse>> GetProductOldest(decimal min, decimal max)
+        public async Task<ActionResult<APIResponse>> GetProductOldest(decimal min, decimal max, string? searchTerm = null)
         {
             IEnumerable<Product> productList = await _dbProduct.GetProductOldest(min, max);
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                productList = productList.Where(p =>
+                    p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+            }
             _response.Result = _mapper.Map<List<ProductDTO>>(productList);
             _response.StatusCode = HttpStatusCode.OK;
             return Ok(_response);
@@ -75,9 +103,15 @@ namespace Fish_Manage.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<APIResponse>> GetProductNewest(decimal min, decimal max)
+        public async Task<ActionResult<APIResponse>> GetProductNewest(decimal min, decimal max, string? searchTerm = null)
         {
             IEnumerable<Product> productList = await _dbProduct.GetProductNewest(min, max);
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                productList = productList.Where(p =>
+                    p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+            }
             _response.Result = _mapper.Map<List<ProductDTO>>(productList);
             _response.StatusCode = HttpStatusCode.OK;
             return Ok(_response);
@@ -86,9 +120,15 @@ namespace Fish_Manage.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<APIResponse>> GetProductInRange(decimal min, decimal max)
+        public async Task<ActionResult<APIResponse>> GetProductInRange(decimal min, decimal max, string? searchTerm = null)
         {
             IEnumerable<Product> productList = await _dbProduct.GetProductInRange(min, max);
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                productList = productList.Where(p =>
+                    p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+            }
             _response.Result = _mapper.Map<List<ProductDTO>>(productList);
             _response.StatusCode = HttpStatusCode.OK;
             return Ok(_response);

@@ -25,6 +25,7 @@ namespace Fish_Manage.Models
         public string? PasswordHash { get; set; }
 
         public int? RoleUser { get; set; }
+        public string? FaceBookId { get; set; }
 
         [ForeignKey("OrderId")]
         public string OrderId { get; set; }

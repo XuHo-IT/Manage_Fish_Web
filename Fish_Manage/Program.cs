@@ -2,6 +2,7 @@ using Fish_Manage;
 using Fish_Manage.Models;
 using Fish_Manage.Models.Momo;
 using Fish_Manage.Repository;
+using Fish_Manage.Repository.DTO;
 using Fish_Manage.Repository.IRepository;
 using Fish_Manage.Service.IService;
 using Fish_Manage.Service.Momo;
@@ -40,12 +41,17 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IPaymentCODService, PaymentCODService>();
 builder.Services.AddScoped<ICouponModelRepository, CouponModelRepository>();
+builder.Services.AddScoped<EmailSender>();
+builder.Services.AddScoped<APIResponse>();
+
 
 //Mail
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 //Cloudinary
 builder.Services.AddSingleton<CloudinaryService>();
+//JWT
+builder.Services.AddScoped<JwtService>();
 
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddAutoMapper(typeof(MappingConfig));
@@ -80,6 +86,11 @@ builder.Services.AddAuthentication(x =>
             ValidateIssuer = false,
             ValidateAudience = false
         };
+    })
+    .AddFacebook(o =>
+    {
+        o.ClientId = "1722472512021344";
+        o.ClientSecret = "354f1bf3299985af82851885835d3bb2";
     });
 
 
@@ -129,18 +140,20 @@ builder.Services.AddCors(options =>
 
 
 
+
+
+
 var app = builder.Build();
 
-// Configure Middleware Pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
 
-app.UseCors("AllowAll"); // Use the CORS policy
+app.UseHttpsRedirection();
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();

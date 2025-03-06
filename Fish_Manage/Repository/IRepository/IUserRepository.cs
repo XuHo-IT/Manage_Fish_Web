@@ -1,12 +1,19 @@
 ﻿using Fish_Manage.Models;
-using Fish_Manage.Repository.DTO;
+using Fish_Manage.Models.DTO.User;
+using Microsoft.AspNetCore.Identity;
 
 namespace Fish_Manage.Repository.IRepository
 {
     public interface IUserRepository : IRepository<ApplicationUser>
     {
         bool IsUniqueUser(string username);
+        Task<bool> AddToRoleAsync(string userId, string roleName);
+        Task<ApplicationUser> GetUserByEmail(string email);
+        Task<ApplicationUser> GetUserByUsername(string userName);
+        Task<IdentityResult> CreateUserAsync(ApplicationUser user);
         Task<LoginResponseDTO> Login(LoginRequestDTO loginRequestDTO);
-        Task<UserDTO> Register(RegisterationRequestDTO registerationRequestDTO);
+        Task<ApplicationUser> Register(RegisterationRequestDTO registerationRequestDTO);
+        Task<bool> ValidatePassword(ApplicationUser user, string password);
+        Task<ApplicationUser> UpdateAsync(ApplicationUser user);
     }
 }
