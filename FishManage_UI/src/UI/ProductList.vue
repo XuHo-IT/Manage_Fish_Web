@@ -1,8 +1,29 @@
 <template>
   <div>
-    <!-- Button to trigger the offcanvas cart -->
+    <div class="search-bar row bg-light p-2 rounded-4">
+      <div class="col-md-4 d-none d-md-block">
+      </div>
+      <div class="col-11 col-md-7">
+        <form id="search-form" class="text-center" action="index.html" method="post">
+          <input
+            v-model="searchTerm"
+            type="text"
+            class="form-control border-0 bg-transparent"
+            placeholder="Search for more than 20,000 products"
+          />
+        </form>
+      </div>
+      <div class="col-1">
+        <svg @click="handleSearch" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+          <path
+            fill="currentColor"
+            d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0a1 1 0 0 0 0-1.39ZM11 18a7 7 0 1 1 7-7a7 7 0 0 1-7 7Z"
+          />
+        </svg>
+      </div>
+    </div>
+
     <ul class="d-flex justify-content-end list-unstyled m-0">
-      <div id="auth-modal"></div>
       <!-- Separate Section for Auth Modal -->
       <li></li>
       <li>
@@ -83,6 +104,12 @@
 
     <div class="row">
       <div class="col-md-12">
+        <!-- <div class="d-flex justify-content-center gap-3 mb-3">
+          <button @click="filterProducts('cat')" class="btn btn-outline-primary">Cat</button>
+          <button @click="filterProducts('dog')" class="btn btn-outline-success">Dog</button>
+          <button @click="filterProducts('produtcs')" class="btn btn-outline-warning">Fish</button>
+          <button @click="filterProducts('all')" class="btn btn-outline-dark">All</button>
+        </div> -->
         <div class="swiper">
           <div class="swiper-wrapper">
             <div class="product-item swiper-slide">
@@ -186,30 +213,38 @@ const minPrice = ref(0);
 const maxPrice = ref(100);
 const sortOrder = ref("default");
 const products = ref([]);
-const isAuthenticated = ref(!!localStorage.getItem("token"));
-const isAdmin = ref(false);
-const userId = ref(null);
+
 const isModalVisible = ref(false);
 const isCartVisible = ref(false);
 const isEditMode = ref(false);
 const currentProduct = ref(null);
 const api = "https://localhost:7229/api/FishProductAPI";
 const cart = ref([]);
-
+const  searchTerm = ref([]);
 // Import and initialize useRouter correctly
 const router = useRouter();
 
-const loadAuthState = () => {
-  const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user"));
-  const role = localStorage.getItem("role");
+const isAuthenticated = ref(false);
+const isAdmin = ref(false);
+const userId = ref(null);
 
-  if (token && user && role) {
-    isAuthenticated.value = true;
-    isAdmin.value = role === "admin";
-    userId.value = user.id;
-  }
+const loadAuthState = () => {
+  const params = new URLSearchParams(window.location.search);
+
+  const token = localStorage.getItem("token");
+  const userIdParam = params.get("userId");
+  const role = params.get("isAdmin");
+
+  console.log("URL Params:", { token, userIdParam, role });
+  if (userIdParam) userId.value = userIdParam;
+  isAuthenticated.value = !!token;
+  isAdmin.value = role === "true";
 };
+
+// Run on component mount
+onMounted(() => {
+  loadAuthState();
+});
 
 const addToCart = (product) => {
   if (product.quantity === 0 || product.quantity === "" || product.quantity == null) {
@@ -244,26 +279,28 @@ const imageSrc = (product) => {
   }
   return "path/to/default-image.png";
 };
-
+const handleSearch = () => {
+  getProductData();
+};
 const fetchSortedProducts = () => {
-  let apiUrl = `https://localhost:7229/api/FishProductAPI/GetProductInRange?min=${minPrice.value}&max=${maxPrice.value}`;
+  let apiUrl = `https://localhost:7229/api/FishProductAPI/GetProductInRange?min=${minPrice.value}&max=${maxPrice.value}&searchTerm=${searchTerm.value}`;
 
   switch (sortOrder.value) {
     case "asc":
-      apiUrl = `https://localhost:7229/api/FishProductAPI/GetProductAsc?min=${minPrice.value}&max=${maxPrice.value}`;
+      apiUrl = `https://localhost:7229/api/FishProductAPI/GetProductAsc?min=${minPrice.value}&max=${maxPrice.value}&searchTerm=${searchTerm.value}`;
       break;
     case "desc":
-      apiUrl = `https://localhost:7229/api/FishProductAPI/GetProductDesc?min=${minPrice.value}&max=${maxPrice.value}`;
+      apiUrl = `https://localhost:7229/api/FishProductAPI/GetProductDesc?min=${minPrice.value}&max=${maxPrice.value}&searchTerm=${searchTerm.value}`;
       break;
     case "oldest":
-      apiUrl = `https://localhost:7229/api/FishProductAPI/GetProductOldest?min=${minPrice.value}&max=${maxPrice.value}`;
+      apiUrl = `https://localhost:7229/api/FishProductAPI/GetProductOldest?min=${minPrice.value}&max=${maxPrice.value}&searchTerm=${searchTerm.value}`;
       break;
     case "newest":
-      apiUrl = `https://localhost:7229/api/FishProductAPI/GetProductNewest?min=${minPrice.value}&max=${maxPrice.value}`;
+      apiUrl = `https://localhost:7229/api/FishProductAPI/GetProductNewest?min=${minPrice.value}&max=${maxPrice.value}&searchTerm=${searchTerm.value}`;
       break;
-  }
+  };
 
-  console.log("Fetching data from:", apiUrl); // Debugging log
+  console.log("Fetching data from:", apiUrl); 
 
   axios
     .get(apiUrl)
@@ -373,7 +410,6 @@ onMounted(() => {
   loadAuthState();
   getProductData();
   startSession();
-
   window.addEventListener("beforeunload", endSession);
 });
 
@@ -382,6 +418,7 @@ onMounted(() => {
   loadAuthState();
   getProductData();
   startSession();
+  handleSearch();
 
   window.addEventListener("beforeunload", endSession);
 });

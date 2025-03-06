@@ -8,7 +8,7 @@ import CallBack from "@/UI/CallBack.vue";
 import CreateCoupon from "@/UI/CreateCoupon.vue";
 
 const routes = [
-  { path: "/", component: ProductList },
+  { path: "/productList", component: ProductList },
   { path: "/auth", component: AuthModal },
   { path: "/create", component: CreateProduct },
   { path: "/edit", component: EditProduct },

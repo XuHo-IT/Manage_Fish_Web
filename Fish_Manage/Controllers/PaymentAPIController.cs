@@ -81,7 +81,6 @@ namespace Fish_Manage.Controllers
                 _response.Result = _mapper.Map<OrderDTO>(order);
                 _response.StatusCode = HttpStatusCode.Created;
 
-                //return CreatedAtAction("GetOrder", "FishOrderAPIController", new { id = order.OrderId }, _response);
                 return StatusCode(201, _response);
 
 

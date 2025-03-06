@@ -4,7 +4,7 @@
       <tr>
         <th>ORDER ID</th>
         <th>PRDUCT ID</th>
-       <th>QUANTITY</th>
+        <th>QUANTITY</th>
         <th>PAYMENT</th>
         <th>ORDER DATE</th>
         <th class="text-end">TOTAL AMOUNT</th>
@@ -28,34 +28,25 @@
 <script>
 import axios from "axios";
 import { ref, onMounted } from "vue";
-//get token and authorize
-axios.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error),
-);
 
 export default {
   name: "TotalReport",
   setup() {
     const orders = ref([]);
-    const api = "https://localhost:7229/api/FishOrderAPI";
+    const apiOrder = "https://localhost:7229/api/FishOrderAPI";
 
     const getTotalOrders = async () => {
       try {
-        const response = await axios.get(api);
-        if (response.data.isSuccess) {
-          orders.value = response.data.result;
-        } else {
-          console.error("Error: " + response.data.errorMessage);
-        }
+        const token = localStorage.getItem("token");
+        console.log("token: " + token);
+        const response = await axios.get(apiOrder, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        orders.value = response.data.result;
       } catch (error) {
-        console.error("Failed to fetch orders:", error);
+        console.error("Error fetching total orders:", error);
       }
     };
 
