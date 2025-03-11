@@ -144,18 +144,6 @@ builder.Services.AddCors(options =>
                    .AllowAnyHeader();
         });
 });
-////Configuration Login Google Account
-//builder.Services.AddAuthentication(options =>
-//{
-//    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-//    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-//    options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-//}).AddCookie().AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
-//{
-//    options.ClientId = builder.Configuration.GetSection("GoogleKeys:ClientId").Value;
-//    options.ClientSecret = builder.Configuration.GetSection("GoogleKeys: ClientSecret").Value;
-//});
-
 
 //System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12 | System.Net.SecurityProtocolType.Tls13;
 
