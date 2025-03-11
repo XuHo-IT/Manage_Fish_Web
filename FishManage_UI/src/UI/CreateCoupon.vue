@@ -76,73 +76,41 @@
   </div>
 </template>
 
-<script>
-import axios from "axios";
-axios.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  },
-);
+<script setup>
+import { ref } from 'vue';
+import api from "@/js/api_auth.js";
 
-export default {
-  name: "CreateCoupon",
-  data() {
-    return {
-      newCoupon: {
-        couponCode: "",
-        couponDescription: "",
-        description: "",
-        quantity: null,
-        dateStart: null,
-        dateEnd: null,
-      },
-    };
-  },
-  methods: {
-    async createCoupon() {
-      //FormData is typically used for file uploads,
-      //   const formData = new FormData();
-      //   formData.append("ProductCode", this.newCoupon.ProductCode);
 
-      const formData = {
-        couponCode: this.newCoupon.couponCode,
-        couponDescription: this.newCoupon.couponDescription,
-        quantity: this.newCoupon.quantity,
-        dateStart: this.newCoupon.dateStart,
-        dateEnd: this.newCoupon.dateEnd,
-      };
+const newCoupon = ref({
+  couponCode: "",
+  couponDescription: "",
+  quantity: null,
+  dateStart: null,
+  dateEnd: null,
+});
 
-      try {
-        const response = await axios.post(
-          "https://localhost:7229/api/CouponModel/CreateCoupon",
-          formData,
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          },
-        );
-        alert("Coupon created successfully!");
-        console.log("Coupon created successfully:", response.data);
-      } catch (error) {
-        alert("Coupon created fail!");
-        console.error("Error creating Coupon:", error);
-      }
-    },
-    generateCouponCode() {
-      this.newCoupon.couponCode = Math.random().toString(36).substring(2, 7).toUpperCase();
-    },
-  },
-  mounted() {
-    this.generateCouponCode();
-  },
+
+const generateCouponCode = () => {
+  newCoupon.value.couponCode = Math.random().toString(36).substring(2, 7).toUpperCase();
+};
+
+
+const createCoupon = async () => {
+  const formData = {
+    couponCode: newCoupon.value.couponCode,
+    couponDescription: newCoupon.value.couponDescription,
+    quantity: newCoupon.value.quantity,
+    dateStart: newCoupon.value.dateStart,
+    dateEnd: newCoupon.value.dateEnd,
+  };
+
+  try {
+    await api.post("CouponModel/CreateCoupon", formData);
+    alert("Coupon created successfully!");
+  } catch (error) {
+    alert("Coupon creation failed!");
+    console.error("Error:", error);
+  }
 };
 </script>
 

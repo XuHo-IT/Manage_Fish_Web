@@ -253,7 +253,45 @@ namespace Fish_Manage.Controllers
                 Result = "Password reset email sent successfully."
             });
         }
+        [HttpGet("{id}", Name = "GetUser")]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<APIResponse>> GetUser(string id)
+        {
+            try
+            {
+                if (id == "")
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    return BadRequest(_response);
+                }
+                var user = await _userRepo.GetAsync(u => u.Id == id);
+                if (user == null)
+                {
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    return NotFound(_response);
+                }
+                var currentRoles = await _userManager.GetRolesAsync(user);
 
+                var userDTO = _mapper.Map<UserDTO>(user);
+                userDTO.Role = currentRoles.FirstOrDefault();
+
+                _response.Result = userDTO;
+                _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.ErrorMessages
+                     = new List<string>() { ex.ToString() };
+            }
+            return _response;
+        }
         [HttpPost("resetPass")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO model)
         {
@@ -286,7 +324,24 @@ namespace Fish_Manage.Controllers
                 Result = "Password has been successfully reset."
             });
         }
-
+        //public async Task<IActionResult> GoogleResponse()
+        //{
+        //    var result = await HttpContext
+        //        .AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        //    var claim = result.Principal.Identities.FirstOrDefault().Claims.Select(claim => new
+        //    {
+        //        claim.Issuer,
+        //        claim.OriginalIssuer,
+        //        claim.Type,
+        //        claim.Value
+        //    });
+        //    return Ok(new APIResponse
+        //    {
+        //        StatusCode = HttpStatusCode.OK,
+        //        IsSuccess = true,
+        //        Result = claim
+        //    });
+        //}
 
     }
 }

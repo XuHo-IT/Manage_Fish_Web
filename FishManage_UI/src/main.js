@@ -15,6 +15,7 @@ import MailFirstCoupon from "./UI/MailFirstCoupon.vue";
 import NewList from "./UI/NewList.vue";
 import VueApexCharts from "vue3-apexcharts";
 import ButtonLogin from "./UI/ButtonLogin.vue";
+import Voice from "./UI/Voice.vue";
 import router from "./router/index.js";
 import store from "./js/store.js"; 
 
@@ -71,3 +72,6 @@ mailFirstCoupon.mount("#mailCoupon");
 
 const buttonLogin = createApp(ButtonLogin);
 buttonLogin.mount("#buttonLogin");
+
+const voice = createApp(Voice);
+voice.mount("#voice");

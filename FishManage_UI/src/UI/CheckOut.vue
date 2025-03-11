@@ -136,9 +136,10 @@
 }
 </style>
 
-<script>
+<script setup>
 import { ref, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
+import api from "@/js/api_auth.js";
 const isAuthenticated = ref(false);
 const isAdmin = ref(false);
 const userId = ref(null);
@@ -146,252 +147,208 @@ const userId = ref(null);
 const loadAuthState = () => {
   const params = new URLSearchParams(window.location.search);
 
-  const token = params.get("token");
-  const userIdParam = params.get("userId");
-  const role = params.get("isAdmin");
-
-  console.log("URL Params:", { token, userIdParam, role });
+  const token = localStorage.getItem("token") || params.get("token");
+  const userIdParam = localStorage.getItem("userId") || params.get("userId");
+  const role = localStorage.getItem("isAdmin") || params.get("isAdmin");
   if (userIdParam) userId.value = userIdParam;
   isAuthenticated.value = params.get("isAuthenticated") === "true";
   isAdmin.value = role === "true";
 };
-export default {
-  name: "Checkout",
-  setup() {
-    const cart = ref([]);
-    const total = ref(0);
-    const userInfo = ref({
-      FullName: "",
-      phoneNumber: "",
-      address: "",
-      city: "",
-      zipCode: "",
-      email: "",
-    });
-    const shippingPrice = ref(0);
+const cart = ref([]);
+const total = ref(0);
+const userInfo = ref({
+  FullName: "",
+  phoneNumber: "",
+  address: "",
+  city: "",
+  zipCode: "",
+  email: "",
+});
+const shippingPrice = ref(0);
 
-    const router = useRouter();
-    // Location data
-    const provinces = ref([]);
-    const districts = ref([]);
-    const wards = ref([]);
-    const selectedProvince = ref("0");
-    const selectedDistrict = ref("0");
-    const selectedWard = ref("0");
+const router = useRouter();
 
-    const coupons = ref([]);
-    const selectedCouponCode = ref("");
-    const selectedCoupon = ref(null);
-    const newTotal = ref(0);
+const provinces = ref([]);
+const districts = ref([]);
+const wards = ref([]);
+const selectedProvince = ref("0");
+const selectedDistrict = ref("0");
+const selectedWard = ref("0");
 
-    const fetchCoupons = async () => {
-      try {
-        const response = await fetch("https://localhost:7229/api/CouponModel");
-        const data = await response.json();
-        if (data.isSuccess) {
-          coupons.value = data.result;
-          console.log(coupons.value);
-        }
-      } catch (error) {
-        console.error("Error fetching coupons:", error);
-      }
-    };
+const coupons = ref([]);
+const selectedCouponCode = ref("");
+const selectedCoupon = ref(null);
+const newTotal = ref(0);
 
-    const fetchProvinces = async () => {
-      try {
-        const response = await fetch("https://esgoo.net/api-tinhthanh/1/0.htm");
-        const data = await response.json();
-        if (data.error === 0) {
-          provinces.value = data.data;
-        }
-      } catch (error) {
-        console.error("Error fetching provinces:", error);
-      }
-    };
-
-    watch(selectedProvince, async (newVal) => {
-      if (newVal !== "0") {
-        try {
-          const response = await fetch(`https://esgoo.net/api-tinhthanh/2/${newVal}.htm`);
-          const data = await response.json();
-          if (data.error === 0) {
-            districts.value = data.data;
-            wards.value = []; // Reset wards
-          }
-        } catch (error) {
-          console.error("Error fetching districts:", error);
-        }
-      }
-    });
-
-    watch(selectedDistrict, async (newVal) => {
-      if (newVal !== "0") {
-        try {
-          const response = await fetch(`https://esgoo.net/api-tinhthanh/3/${newVal}.htm`);
-          const data = await response.json();
-          if (data.error === 0) {
-            wards.value = data.data;
-          }
-        } catch (error) {
-          console.error("Error fetching wards:", error);
-        }
-      }
-    });
-    watch([selectedProvince, selectedDistrict, selectedWard], () => {
-      const province =
-        provinces.value.find((p) => p.id === selectedProvince.value)?.full_name || "";
-      const district =
-        districts.value.find((d) => d.id === selectedDistrict.value)?.full_name || "";
-      const ward = wards.value.find((w) => w.id === selectedWard.value)?.full_name || "";
-
-      userInfo.value.address = [ward, district, province].filter(Boolean).join(", ");
-    });
-
-    watch(
-      userInfo,
-      (newVal) => {
-        if (Object.values(newVal).every((field) => field.trim() !== "")) {
-          shippingPrice.value = (Math.random() * (2 - 0.25) + 0.25).toFixed(2);
-        }
-      },
-      { deep: true },
-    );
-    const checkCoupon = async () => {
-      selectedCoupon.value =
-        coupons.value.find((c) => c.couponCode === selectedCouponCode.value) || null;
-
-      if (!selectedCoupon.value || !selectedCoupon.value.couponId) {
-        alert("Please enter a valid coupon code.");
-        return;
-      }
-
-      const totalAmount = total.value ? Math.round(total.value) : 0;
-      const shippingAmount = shippingPrice.value ? parseFloat(shippingPrice.value) : 0;
-
-      const moneyDouble = totalAmount + shippingAmount;
-      const requestData = {
-        money: moneyDouble,
-        couponId: selectedCoupon.value.couponId,
-      };
-
-      console.log("Sending request:", requestData);
-
-      try {
-        const response = await fetch("https://localhost:7229/api/CouponModel/ApplyDiscount", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(requestData),
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          newTotal.value = data.newTotal.toFixed(2).toString();
-        } else {
-          alert("Failed to apply the coupon.");
-        }
-      } catch (error) {
-        console.error("Error during coupon validation:", error);
-        alert("An error occurred while applying the coupon.");
-      }
-    };
-
-    const createPaymentByCOD = async () => {
-      try {
-        const response = await fetch("https://localhost:7229/PaymentAPI/CreatePaymentCOD", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId: localStorage.getItem("userId") || new Date().getTime().toString(),
-            orderDate: new Date().toISOString(),
-            totalAmount: newTotal.value.toString(),
-            paymentMethod: "COD",
-            productId: cart.value.map((item) => item.productId).join(","),
-            quantity: cart.value.reduce((sum, item) => sum + item.quantity, 0),
-            unitPrice: cart.value.reduce((sum, item) => sum + item.price, 0),
-          }),
-        });
-        const textResponse = await response.json();
-        console.log("Server response:", textResponse);
-        router.push({
-          name: "CallBack",
-          query: {
-            orderId: textResponse.result.orderId,
-            userId: textResponse.result.userId,
-            amount: newTotal.value.toString(),
-            payType: textResponse.result.paymentMethod,
-            status: textResponse.isSuccess ? "success" : "failed",
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(textResponse);
-        }
-      } catch (error) {
-        console.error("Error creating payment:", error);
-      }
-    };
-    const createPayment = async () => {
-      try {
-        const response = await fetch("https://localhost:7229/PaymentAPI/CreatePaymentMomo", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            FullName: userInfo.value.FullName,
-            OrderId: new Date().getTime().toFixed(2),
-            Orderinformation: "Your order",
-            Amount: coupons.value,
-          }),
-        });
-
-        const textResponse = await response.text();
-        console.log("Server response:", textResponse);
-
-        if (!response.ok) {
-          throw new Error(textResponse);
-        }
-
-        const data = JSON.parse(textResponse);
-        window.location.href = data.payUrl;
-      } catch (error) {
-        console.error("Error creating payment:", error);
-      }
-    };
-    onMounted(() => {
-      const cartData = localStorage.getItem("cart");
-      const totalData = localStorage.getItem("total");
-      if (cartData && totalData) {
-        cart.value = JSON.parse(cartData);
-        total.value = parseFloat(totalData);
-      }
-      fetchCoupons();
-      fetchProvinces();
-      loadAuthState();
-    });
-    return {
-      selectedCouponCode,
-      selectedCoupon,
-      checkCoupon,
-      cart,
-      total,
-      userInfo,
-      provinces,
-      districts,
-      wards,
-      selectedProvince,
-      selectedDistrict,
-      selectedWard,
-      createPayment,
-      createPaymentByCOD,
-      shippingPrice,
-      newTotal,
-    };
-  },
+const fetchCoupons = async () => {
+  try {
+    const response = await api.get("CouponModel");
+    const data = await response.json();
+    if (data.isSuccess) {
+      coupons.value = data.result;
+      console.log(coupons.value);
+    }
+  } catch (error) {
+    console.error("Error fetching coupons:", error);
+  }
 };
+
+const fetchProvinces = async () => {
+  try {
+    const response = await fetch("https://esgoo.net/api-tinhthanh/1/0.htm");
+    const data = await response.json();
+    if (data.error === 0) {
+      provinces.value = data.data;
+    }
+  } catch (error) {
+    console.error("Error fetching provinces:", error);
+  }
+};
+
+watch(selectedProvince, async (newVal) => {
+  if (newVal !== "0") {
+    try {
+      const response = await fetch(`https://esgoo.net/api-tinhthanh/2/${newVal}.htm`);
+      const data = await response.json();
+      if (data.error === 0) {
+        districts.value = data.data;
+        wards.value = []; // Reset wards
+      }
+    } catch (error) {
+      console.error("Error fetching districts:", error);
+    }
+  }
+});
+
+watch(selectedDistrict, async (newVal) => {
+  if (newVal !== "0") {
+    try {
+      const response = await fetch(`https://esgoo.net/api-tinhthanh/3/${newVal}.htm`);
+      const data = await response.json();
+      if (data.error === 0) {
+        wards.value = data.data;
+      }
+    } catch (error) {
+      console.error("Error fetching wards:", error);
+    }
+  }
+});
+watch([selectedProvince, selectedDistrict, selectedWard], () => {
+  const province = provinces.value.find((p) => p.id === selectedProvince.value)?.full_name || "";
+  const district = districts.value.find((d) => d.id === selectedDistrict.value)?.full_name || "";
+  const ward = wards.value.find((w) => w.id === selectedWard.value)?.full_name || "";
+
+  userInfo.value.address = [ward, district, province].filter(Boolean).join(", ");
+});
+
+watch(
+  userInfo,
+  (newVal) => {
+    if (Object.values(newVal).every((field) => field.trim() !== "")) {
+      shippingPrice.value = (Math.random() * (2 - 0.25) + 0.25).toFixed(2);
+    }
+  },
+  { deep: true },
+);
+const checkCoupon = async () => {
+  selectedCoupon.value =
+    coupons.value.find((c) => c.couponCode === selectedCouponCode.value) || null;
+
+  if (!selectedCoupon.value || !selectedCoupon.value.couponId) {
+    alert("Please enter a valid coupon code.");
+    return;
+  }
+
+  const totalAmount = total.value ? Math.round(total.value) : 0;
+  const shippingAmount = shippingPrice.value ? parseFloat(shippingPrice.value) : 0;
+
+  const moneyDouble = totalAmount + shippingAmount;
+  const requestData = {
+    money: moneyDouble,
+    couponId: selectedCoupon.value.couponId,
+  };
+
+
+  try {
+    const response = await api.post("CouponModel/ApplyDiscount",requestData);
+
+    const data = await response.json();
+
+    if (response.ok) {
+      newTotal.value = data.newTotal.toFixed(2).toString();
+    } else {
+      alert("Failed to apply the coupon.");
+    }
+  } catch (error) {
+    console.error("Error during coupon validation:", error);
+    alert("An error occurred while applying the coupon.");
+  }
+};
+
+const createPaymentByCOD = async () => {
+  try {
+    const response = await api.post("PaymentAPI/CreatePaymentCOD", 
+    JSON.stringify({
+        userId: localStorage.getItem("userId") || new Date().getTime().toString(),
+        orderDate: new Date().toISOString(),
+        totalAmount: newTotal.value.toString(),
+        paymentMethod: "COD",
+        productId: cart.value.map((item) => item.productId).join(","),
+        quantity: cart.value.reduce((sum, item) => sum + item.quantity, 0),
+        unitPrice: cart.value.reduce((sum, item) => sum + item.price, 0),
+      }),
+    );
+    const textResponse = await response.json();
+    router.push({
+      name: "CallBack",
+      query: {
+        orderId: textResponse.result.orderId,
+        userId: textResponse.result.userId,
+        amount: newTotal.value.toString(),
+        payType: textResponse.result.paymentMethod,
+        status: textResponse.isSuccess ? "success" : "failed",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(textResponse);
+    }
+  } catch (error) {
+    console.error("Error creating payment:", error);
+  }
+};
+const createPayment = async () => {
+  try {
+    const response = await api.post("PaymentAPI/CreatePaymentMomo",  JSON.stringify({
+        FullName: userInfo.value.FullName,
+        OrderId: new Date().getTime().toFixed(2),
+        Orderinformation: userInfo.value.toString(),
+        Amount: newTotal.value.toString(),
+      }),
+    );
+
+    const textResponse = await response.text();
+    console.log("Server response:", textResponse);
+
+    if (!response.ok) {
+      throw new Error(textResponse);
+    }
+
+    const data = JSON.parse(textResponse);
+    window.location.href = data.payUrl;
+  } catch (error) {
+    console.error("Error creating payment:", error);
+  }
+};
+onMounted(() => {
+  const cartData = localStorage.getItem("cart");
+  const totalData = localStorage.getItem("total");
+  if (cartData && totalData) {
+    cart.value = JSON.parse(cartData);
+    total.value = parseFloat(totalData);
+  }
+  fetchCoupons();
+  fetchProvinces();
+  loadAuthState();
+});
 </script>

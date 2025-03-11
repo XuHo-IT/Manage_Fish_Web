@@ -68,6 +68,42 @@
           </div>
         </div>
       </div>
+      <div class="card-body">
+        <div class="tab-content" id="chart-tab-tabContent">
+          <table class="table">
+            <thead>
+              <tr>
+                <!-- <th>Order ID</th> -->
+                <th>User ID</th>
+                <th>Username</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Current Role</th>
+                <th>Change Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(user, index) in users" :key="index">
+                <!-- <td>
+                    <a href="#" class="text-muted">{{ user.orderId }}</a>
+                  </td> -->
+                <td>{{ user.id }}</td>
+                <td>{{ user.userName }}</td>
+                <td>{{ user.name }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.role }}</td>
+                <td class="text-end">
+                  <select v-model="user.role" @change="updateUserRole(user)">
+                    <option v-for="selectedRole in roles" :key="selectedRole" :value="selectedRole">
+                      {{ selectedRole }}
+                    </option>
+                  </select>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -79,11 +115,15 @@ import axios from "axios";
 // Lazy-load VueApexCharts to ensure it's available
 const VueApexCharts = defineAsyncComponent(() => import("vue3-apexcharts"));
 
+const users = ref([]);
 const totalViews = ref(0);
 const totalSessions = ref(0);
 const series = ref([]);
 const isChartReady = ref(false);
-const apiBaseUrl = "https://localhost:7229/api/Analytics";
+const apiAnalyticsUrl = "https://localhost:7229/api/Analytics";
+const userurl = "https://localhost:7229/api/User";
+const roles = ref(["Admin", "Customer"]);
+const selectedRole = ref([]);
 
 const chartOptions = ref({
   chart: {
@@ -103,10 +143,27 @@ const chartOptions = ref({
   },
 });
 
+const updateUserRole = async (user) => {
+  try {
+    const responseUser = await axios.get(`${userurl}/${user.id}`);
+    if (responseUser.data) {
+      const updatedUser = {
+        ...user,
+        role: user.role,
+      };
+
+      await axios.put(`${userurl}/${user.id}`, updatedUser);
+
+      alert(`Updated role for ${updatedUser.userName} to ${updatedUser.role}`);
+    }
+  } catch (error) {
+    alert("Error updating user role: " + error);
+  }
+};
+
 const fetchVisitorData = async () => {
   try {
-    const response = await axios.get(`${apiBaseUrl}/GetAnalytics`);
-
+    const response = await axios.get(`${apiAnalyticsUrl}/GetAnalytics`);
     if (response.data) {
       totalViews.value = response.data.totalViews;
       totalSessions.value = response.data.activeSessions;
@@ -118,7 +175,6 @@ const fetchVisitorData = async () => {
         },
       ];
 
-      // Wait for DOM updates before setting chart ready
       await nextTick();
       isChartReady.value = true;
     }
@@ -127,5 +183,21 @@ const fetchVisitorData = async () => {
   }
 };
 
-onMounted(fetchVisitorData);
+// Fetch user data
+const fetchUser = async () => {
+  try {
+    const response = await axios.get(`${userurl}`);
+    if (response.data) {
+      users.value = response.data.result;
+    }
+  } catch (error) {
+    console.error("Error fetching users:", error);
+  }
+};
+
+// Fetch data on mounted
+onMounted(() => {
+  fetchVisitorData();
+  fetchUser();
+});
 </script>

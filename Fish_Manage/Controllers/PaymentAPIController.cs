@@ -11,8 +11,8 @@ using System.Net;
 
 namespace Fish_Manage.Controllers
 {
+    [Route("api/PaymentAPI")]
     [ApiController]
-    [Route("[controller]")]
     public class PaymentAPIController : ControllerBase
     {
         private readonly FishManageContext _db;
