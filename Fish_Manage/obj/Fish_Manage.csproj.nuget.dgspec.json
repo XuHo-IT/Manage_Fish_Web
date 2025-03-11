@@ -58,11 +58,19 @@
               "target": "Package",
               "version": "[12.0.0, )"
             },
+            "Azure.AI.OpenAI": {
+              "target": "Package",
+              "version": "[2.1.0, )"
+            },
             "CloudinaryDotNet": {
               "target": "Package",
               "version": "[1.27.4, )"
             },
             "Microsoft.AspNetCore.Authentication.Facebook": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Microsoft.AspNetCore.Authentication.Google": {
               "target": "Package",
               "version": "[8.0.0, )"
             },
@@ -90,6 +98,10 @@
               "target": "Package",
               "version": "[5.1.0, )"
             },
+            "Microsoft.AspNetCore.OpenApi": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
             "Microsoft.EntityFrameworkCore.SqlServer": {
               "target": "Package",
               "version": "[8.0.2, )"
@@ -104,9 +116,17 @@
               "target": "Package",
               "version": "[8.0.0, )"
             },
+            "NAudio": {
+              "target": "Package",
+              "version": "[2.2.1, )"
+            },
             "Newtonsoft.Json": {
               "target": "Package",
               "version": "[13.0.3, )"
+            },
+            "OpenAI": {
+              "target": "Package",
+              "version": "[2.1.0, )"
             },
             "RestSharp": {
               "target": "Package",
@@ -119,6 +139,10 @@
             "System.IdentityModel.Tokens.Jwt": {
               "target": "Package",
               "version": "[8.0.0, )"
+            },
+            "Vosk": {
+              "target": "Package",
+              "version": "[0.3.38, )"
             }
           },
           "imports": [

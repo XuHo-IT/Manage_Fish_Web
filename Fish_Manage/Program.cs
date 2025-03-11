@@ -7,15 +7,21 @@ using Fish_Manage.Repository.IRepository;
 using Fish_Manage.Service.IService;
 using Fish_Manage.Service.Momo;
 using Fish_Manage.Service.Payment;
+using Fish_Manage.Service.Vosk;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Net;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
+
+//OpenAIAPI
 
 //Momo
 builder.Services.Configure<MomoOptionModel>(builder.Configuration.GetSection("MomoAPI"));
@@ -47,7 +53,8 @@ builder.Services.AddScoped<APIResponse>();
 
 //Mail
 builder.Services.AddTransient<IEmailSender, EmailSender>();
-
+//Vosk
+builder.Services.AddSingleton<VoskModelService>();
 //Cloudinary
 builder.Services.AddSingleton<CloudinaryService>();
 //JWT
@@ -137,10 +144,35 @@ builder.Services.AddCors(options =>
                    .AllowAnyHeader();
         });
 });
+////Configuration Login Google Account
+//builder.Services.AddAuthentication(options =>
+//{
+//    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+//    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+//    options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+//}).AddCookie().AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+//{
+//    options.ClientId = builder.Configuration.GetSection("GoogleKeys:ClientId").Value;
+//    options.ClientSecret = builder.Configuration.GetSection("GoogleKeys: ClientSecret").Value;
+//});
 
 
+//System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12 | System.Net.SecurityProtocolType.Tls13;
 
 
+HttpClientHandler handler = new HttpClientHandler
+{
+    ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+};
+
+HttpClient client = new HttpClient(handler);
+
+
+//ServicePointManager.ServerCertificateValidationCallback +=   //allow all certificate
+//    (sender, certificate, chain, errors) =>
+//    {
+//        return true;
+//    };
 
 
 var app = builder.Build();

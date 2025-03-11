@@ -89,20 +89,8 @@
   </div>
 </template>
 
-<script>
-import axios from "axios";
-axios.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token"); 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  },
-);
+<!-- <script>   Vue Options API
+import api from "@/js/api_auth.js";
 
 export default {
   computed: {
@@ -166,11 +154,7 @@ export default {
       formData.append("imageFile", this.imageFile);
 
       try {
-        const response = await axios.post("https://localhost:7229/api/FishProductAPI", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
+        const response = api.post("FishProductAPI",formData);
         alert("Product created successfully!");
         console.log("Product created successfully:", response.data);
       } catch (error) {
@@ -179,6 +163,70 @@ export default {
       }
     },
   },
+};
+</script> -->
+
+<!-- Vue Composition API -->
+<script setup>
+import { ref } from "vue";
+import api from "@/js/api_auth.js";
+
+const newProduct = ref({
+  ProductName: "",
+  Price: null,
+  Category: "",
+  Description: "",
+  Supplier: "",
+});
+
+const imageFile = ref(null);
+const validationErrors = ref([]);
+
+const handleImageUpload = (event) => {
+  imageFile.value = event.target.files[0];
+};
+
+const createProduct = async () => {
+  validationErrors.value = [];
+
+  if (!newProduct.value.ProductName) {
+    validationErrors.value.push("ProductName is required.");
+  }
+  if (!newProduct.value.Description) {
+    validationErrors.value.push("Description is required.");
+  }
+  if (!imageFile.value) {
+    validationErrors.value.push("ImageURL is required.");
+  }
+  if (!newProduct.value.Category) {
+    validationErrors.value.push("Category is required.");
+  }
+  if (!newProduct.value.Supplier) {
+    validationErrors.value.push("Supplier is required.");
+  }
+  if (validationErrors.value.length > 0) {
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("ProductName", newProduct.value.ProductName);
+  formData.append("Price", newProduct.value.Price);
+  formData.append("Category", newProduct.value.Category);
+  formData.append("Description", newProduct.value.Description);
+  formData.append("Supplier", newProduct.value.Supplier);
+  formData.append("imageFile", imageFile.value);
+
+  try {
+    const response = await api.post("FishProductAPI", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    window.location.reload();
+    alert("Product created successfully!");
+  } catch (error) {
+    alert("Product creation failed!");
+  }
 };
 </script>
 

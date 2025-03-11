@@ -28,47 +28,40 @@
   </li>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      isAuthenticated: false,
-      isAdmin: false,
-      userId: null,
-    };
-  },
-  mounted() {
-    this.loadAuthState();
-  },
-  methods: {
-    loadAuthState() {
+<script setup>
+import { ref, onMounted } from 'vue';
+  const isAuthenticated = ref(false);
+  const isAdmin = ref(false);
+  const userId =  ref(false);
+
+    const loadAuthState = () => {
       const params = new URLSearchParams(window.location.search);
       const authenticated = params.get("isAuthenticated");
       const userIdParam = params.get("userId");
-      const role = params.get("isAdmin"); // This is coming as a string
-      this.isAuthenticated = !!authenticated; // Check if token exists
-      this.isAdmin = role === "true"; // Convert string "true"/"false" to boolean
-      this.userId = userIdParam;
-      console.log("buttonlogin token:"+ localStorage.getItem("token"));
-    },
-    dashboard() {
+      const role = params.get("isAdmin");
+      // Check if token exists
+      isAuthenticated.value = !!authenticated;
+      // Convert string "true"/"false" to boolean
+      isAdmin.value = role === "true";
+      userId.value = userIdParam;
+    };
+   const dashboard =() => {
       const queryParams = new URLSearchParams({
-        userId: this.userId ? encodeURIComponent(this.userId) : "",
-        isAdmin: this.isAdmin.toString(),
-        isAuthenticated: this.isAuthenticated.toString(),
+        userId: userId.value ? encodeURIComponent(userId.value) : "",
+        isAdmin: isAdmin.value.toString(),
+        isAuthenticated: isAuthenticated.value  .toString(),
       }).toString();
 
       window.location.href = `/src/dist/dashboard/index.html?${queryParams}`;
-    },
+    };
 
-    logout() {
+    const logout = () => {
       localStorage.removeItem("token");
-      this.isAuthenticated = false;
-      this.isAdmin = false;
-      this.userId = null;
+      isAuthenticated.value = false;
+      isAdmin.value = false;
+      userId.value = null;
       window.history.pushState({}, "", "/");
       window.location.reload();
-    },
-  },
-};
+  };
+  onMounted(loadAuthState);
 </script>
