@@ -104,84 +104,66 @@
     </div>
   </div>
 </template>
+<script setup>
+import { ref } from "vue";
+import api from "@/js/api_auth.js";
 
-<script>
-import axios from "axios";
-
-axios.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
+const props = defineProps({
+  product: {
+    type: Object,
+    required: true,
   },
-  (error) => {
-    return Promise.reject(error);
-  },
-);
+});
 
-export default {
-  name: "EditProduct",
-  props: {
-    product: {
-      type: Object,
-      required: true,
-    },
-  },
-  data() {
-    return {
-      imageFile: null,
-      oldImageFile: this.product.imageURl,
-    };
-  },
-  methods: {
-    handleFileUploadUpdate(event) {
-      const selectedFile = event.target.files[0];
-      if (selectedFile) {
-        this.imageFile = selectedFile;
-      } else if (!this.imageFile) {
-        this.imageFile = this.oldImageFile;
-      }
-    },
+const imageFile = ref(null);
+const oldImageFile = ref(props.product.imageURl);
 
-    async editProduct() {
-      if (!this.product.productId) {
-        alert("Product ID is missing!");
-        return;
-      }
+const handleFileUploadUpdate = (event) => {
+  const selectedFile = event.target.files[0];
+  if (selectedFile) {
+    imageFile.value = selectedFile;
+  } else if (!imageFile.value) {
+    imageFile.value = oldImageFile.value;
+  }
+};
 
-      const formData = new FormData();
-      formData.append("ProductId", this.product.productId);
-      formData.append("ProductName", this.product.productName);
-      formData.append("Price", this.product.price);
-      formData.append("Category", this.product.category);
-      formData.append("Quantity", this.product.quantity);
-      formData.append("Description", this.product.description);
-      formData.append("Supplier", this.product.supplier);
+const editProduct = async () => {
+  if (!props.product.productId) {
+    alert("Product ID is missing!");
+    return;
+  }
 
-      if (this.imageFile) {
-        formData.append("imageFile", this.imageFile); 
-      } 
-      try {
-        const response = await axios.put(
-          `https://localhost:7229/api/FishProductAPI/${this.product.productId}`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          },
-        );
-        alert("Product updated successfully!");
-        console.log("Product updated successfully:", response.data);
-        
-      } catch (error) {
-        alert("Error updating product!");
-        console.error("Error updating product:", error.response ? error.response.data : error);
-      }
-    },
-  },
+  const formData = new FormData();
+  formData.append("ProductId", props.product.productId);
+  formData.append("ProductName", props.product.productName);
+  formData.append("Price", props.product.price);
+  formData.append("Category", props.product.category);
+  formData.append("Quantity", props.product.quantity);
+  formData.append("Description", props.product.description);
+  formData.append("Supplier", props.product.supplier);
+
+
+
+  if (imageFile.value) {
+    formData.append("imageFile", imageFile.value);
+  }
+
+  try {
+    const response = await api.put(
+      `FishProductAPI/${props.product.productId}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+    alert("Product updated successfully!");
+    console.log("Product updated successfully:", response.data);
+  } catch (error) {
+    alert("Error updating product!");
+    console.error("Error updating product:", error.response ? error.response.data : error);
+  }
 };
 </script>
 

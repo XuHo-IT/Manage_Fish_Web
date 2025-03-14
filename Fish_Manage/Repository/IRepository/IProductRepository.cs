@@ -13,5 +13,7 @@ namespace Fish_Manage.Repository.IRepository
 
         int? GetQuantity(string id);
         Task<Product> GetByIdAsync(string id);
+        Task<List<Product>> GetByIdsAsync(List<string> ids);
+        Task UpdateRangeAsync(List<Product> products);
     }
 }

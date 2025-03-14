@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Fish_Manage.Models.DTO.Product;
+using System.ComponentModel.DataAnnotations;
 
 namespace Fish_Manage.Models.DTO.Order
 {
@@ -8,16 +9,15 @@ namespace Fish_Manage.Models.DTO.Order
         [Required]
         public string UserId { get; set; }
         [Required]
+        public string Name { get; set; }
+        public string Address { get; set; }
+        public string Email { get; set; }
+        public string PhoneNumber { get; set; }
         public DateTime OrderDate { get; set; }
         [Required]
         public string TotalAmount { get; set; }
         [Required]
         public string PaymentMethod { get; set; }
-        [Required]
-        public string ProductId { get; set; }
-        [Required]
-        public int Quantity { get; set; }
-        [Required]
-        public decimal? UnitPrice { get; set; }
+        public ICollection<ProductDTO> Products { get; set; } = new List<ProductDTO>();
     }
 }

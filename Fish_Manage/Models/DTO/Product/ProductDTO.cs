@@ -2,12 +2,11 @@
 
 namespace Fish_Manage.Models.DTO.Product
 {
-    public class ProductDTO
+    public partial class ProductDTO
     {
         [Required]
         public string ProductId { get; set; }
-        [Required]
-        public string OrderId { get; set; }
+
         public string ProductName { get; set; }
 
         public decimal? Price { get; set; }

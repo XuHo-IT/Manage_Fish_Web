@@ -33,8 +33,11 @@ namespace Fish_Manage
             CreateMap<ApplicationUser, UserDTO>();
 
             CreateMap<UserDTO, UserUpdateDTO>().ReverseMap();
+            CreateMap<ApplicationUser, UserUpdateDTO>().ReverseMap();
 
-            CreateMap<ApplicationUser, ProductDTO>();
+
+            CreateMap<RegisterationRequestDTO, ApplicationUser>().ReverseMap();
+
 
 
         }

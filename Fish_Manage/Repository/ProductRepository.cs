@@ -22,6 +22,15 @@ namespace Fish_Manage.Repository
         {
             return await _context.Products.Where(p => p.Price >= minRange && p.Price <= maxRange).OrderBy(p => p.Price).ToListAsync();
         }
+        public async Task<List<Product>> GetByIdsAsync(List<string> ids)
+        {
+            return await _context.Products.Where(p => ids.Contains(p.ProductId)).ToListAsync();
+        }
+        public async Task UpdateRangeAsync(List<Product> products)
+        {
+            _context.Products.UpdateRange(products);
+            await _context.SaveChangesAsync();
+        }
 
 
         public async Task<List<Product>> GetProductDesc(decimal minRange, decimal maxRange)

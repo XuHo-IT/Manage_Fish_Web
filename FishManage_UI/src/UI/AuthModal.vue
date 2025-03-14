@@ -29,6 +29,7 @@
             </div>
             <div class="wrap-input100 validate-input" data-validate="Username is required">
               <input
+                autocomplete="off"
                 v-model="loginData.userName"
                 type="text"
                 placeholder="Username"
@@ -45,6 +46,7 @@
             </div>
             <div class="wrap-input100 validate-input" data-validate="Password is required">
               <input
+                autocomplete="off"
                 v-model="loginData.password"
                 type="password"
                 placeholder="Password"
@@ -86,6 +88,7 @@
             </div>
             <div class="wrap-input100 validate-input" data-validate="Username is required">
               <input
+                autocomplete="off"
                 v-model="registerData.email"
                 type="text"
                 placeholder="Email address"
@@ -99,9 +102,10 @@
             </div>
             <div class="wrap-input100 validate-input" data-validate="Username is required">
               <input
+                autocomplete="off"
                 v-model="registerData.name"
                 type="text"
-                placeholder="Username"
+                placeholder="Fullname"
                 class="w-full px-3 py-2 border rounded focus:ring focus:ring-green-300"
                 required
               />
@@ -112,6 +116,7 @@
             </div>
             <div class="wrap-input100 validate-input" data-validate="Username is required">
               <input
+                autocomplete="off"
                 v-model="registerData.userName"
                 type="text"
                 placeholder="Username"
@@ -120,13 +125,85 @@
               />
               <span class="focus-input100"></span>
             </div>
+            <div class="p-t-31 p-b-9">
+              <span class="txt1"> PhoneNumber </span>
+            </div>
+            <div class="wrap-input100 validate-input" data-validate="PhoneNumer is required">
+              <input
+                autocomplete="off"
+                v-model="registerData.phoneNumber"
+                type="text"
+                placeholder="PhoneNumer"
+                class="w-full px-3 py-2 border rounded focus:ring focus:ring-green-300"
+                required
+              />
+              <span class="focus-input100"></span>
+            </div>
+            <div class="p-t-31 p-b-9">
+              <span class="txt1">Gender</span>
+            </div>
+            <div class="wrap-input100">
+              <select
+                v-model="registerData.gender"
+                class="w-full px-3 py-2 border rounded focus:ring focus:ring-green-300"
+              >
+                <option :value="true">Male</option>
+                <option :value="false">Female</option>
+              </select>
+            </div>
 
+            <div class="p-t-13 p-b-9">
+              <span class="txt1"> Province </span>
+            </div>
+            <div class="wrap-input100 validate-input" data-validate="Password is required">
+              <select id="province" class="form-control" v-model="selectedProvince">
+                <option v-for="province in provinces" :key="province.id" :value="province.id">
+                  {{ province.full_name }}
+                </option>
+              </select>
+            </div>
+
+            <div class="p-t-13 p-b-9">
+              <span class="txt1"> District </span>
+            </div>
+            <div class="wrap-input100 validate-input" data-validate="Password is required">
+              <select id="district" class="form-control" v-model="selectedDistrict">
+                <option v-for="district in districts" :key="district.id" :value="district.id">
+                  {{ district.full_name }}
+                </option>
+              </select>
+            </div>
+            <div class="p-t-13 p-b-9">
+              <span class="txt1"> Ward </span>
+            </div>
+            <div class="wrap-input100 validate-input" data-validate="Password is required">
+              <select id="ward" class="form-control" v-model="selectedWard">
+                <option v-for="ward in wards" :key="ward.id" :value="ward.id">
+                  {{ ward.full_name }}
+                </option>
+              </select>
+            </div>
+            <div class="p-t-13 p-b-9">
+              <span class="txt1"> Date Of Birth </span>
+            </div>
+            <div class="wrap-input100 validate-input" data-validate="DateOfBirth is required">
+              <input
+                autocomplete="off"
+                v-model="registerData.DateOfBirth"
+                type="date"
+                placeholder="DateOfBirth"
+                class="w-full px-3 py-2 border rounded focus:ring focus:ring-green-300"
+                required
+              />
+              <span class="focus-input100"></span>
+            </div>
             <div class="p-t-13 p-b-9">
               <span class="txt1"> Password </span>
               <a href="/Login/ForgotPass.html" class="txt2 bo1 m-l-5"> Forgot? </a>
             </div>
             <div class="wrap-input100 validate-input" data-validate="Password is required">
               <input
+                autocomplete="off"
                 v-model="registerData.password"
                 type="password"
                 placeholder="Password"
@@ -156,7 +233,7 @@
 </style>
 <script setup>
 import api from "@/js/api_auth.js";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 
 const showModal = ref(false);
 const isLogin = ref(true);
@@ -165,8 +242,26 @@ const isAdmin = ref(false);
 const userId = ref(null);
 
 const loginData = ref({ userName: "", password: "" });
-const registerData = ref({ email: "", name: "", userName: "", password: "" });
+
+
+const registerData = ref({
+  email: "",
+  name: "",
+  userName: "",
+  password: "",
+  phoneNumber: "",
+  gender: "Female",
+  address: "",
+  DateOfBirth: "",
+});
 const errorMessage = ref("");
+
+const provinces = ref([]);
+const districts = ref([]);
+const wards = ref([]);
+const selectedProvince = ref("0");
+const selectedDistrict = ref("0");
+const selectedWard = ref("0");
 
 const closeModal = () => {
   showModal.value = false;
@@ -176,8 +271,64 @@ const closeModal = () => {
 
 const clearForm = () => {
   loginData.value = { userName: "", password: "" };
-  registerData.value = { email: "", name: "", userName: "", password: "" };
+  registerData.value = {
+    email: "",
+    name: "",
+    userName: "",
+    password: "",
+    phoneNumber: "",
+    gender: "",
+    address: "",
+    DateOfBirth: "",
+  };
 };
+const fetchProvinces = async () => {
+  try {
+    const response = await fetch("https://esgoo.net/api-tinhthanh/1/0.htm");
+    const data = await response.json();
+    if (data.error === 0) {
+      provinces.value = data.data;
+    }
+  } catch (error) {
+    console.error("Error fetching provinces:", error);
+  }
+};
+
+watch(selectedProvince, async (newVal) => {
+  if (newVal !== "0") {
+    try {
+      const response = await fetch(`https://esgoo.net/api-tinhthanh/2/${newVal}.htm`);
+      const data = await response.json();
+      if (data.error === 0) {
+        districts.value = data.data;
+        wards.value = []; // Reset wards
+      }
+    } catch (error) {
+      console.error("Error fetching districts:", error);
+    }
+  }
+});
+
+watch(selectedDistrict, async (newVal) => {
+  if (newVal !== "0") {
+    try {
+      const response = await fetch(`https://esgoo.net/api-tinhthanh/3/${newVal}.htm`);
+      const data = await response.json();
+      if (data.error === 0) {
+        wards.value = data.data;
+      }
+    } catch (error) {
+      console.error("Error fetching wards:", error);
+    }
+  }
+});
+watch([selectedProvince, selectedDistrict, selectedWard], () => {
+  const province = provinces.value.find((p) => p.id === selectedProvince.value)?.full_name || "";
+  const district = districts.value.find((d) => d.id === selectedDistrict.value)?.full_name || "";
+  const ward = wards.value.find((w) => w.id === selectedWard.value)?.full_name || "";
+
+  registerData.value.address = [ward, district, province].filter(Boolean).join(", ");
+});
 
 const handleLogin = async () => {
   try {
@@ -192,22 +343,9 @@ const handleLogin = async () => {
       }
 
       localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("role", role);
       localStorage.setItem("userId", user.id);
-
-      // Update component state
-      isAdmin.value = role === "admin";
-      isAuthenticated.value = !!token;
-      userId.value = user.id;
-
-      const queryParams = new URLSearchParams({
-        userId: encodeURIComponent(user.id),
-        isAdmin: isAdmin.value.toString(),
-        isAuthenticated: isAuthenticated.value.toString(),
-      }).toString();
-
-      window.history.pushState({}, "", `../?${queryParams}`);
+      window.history.pushState({}, "", `../`);
       closeModal();
       window.location.reload();
     } else {
@@ -222,17 +360,27 @@ const handleLogin = async () => {
 const handleRegister = async () => {
   try {
     const payload = {
-      userName: registerData.value.userName,
-      name: registerData.value.name,
-      password: registerData.value.password,
-      role: "customer",
-      email: registerData.value.email,
+      UserName: registerData.value.userName,
+      FullName: registerData.value.name,
+      Password: registerData.value.password,
+      Role: "customer",
+      Email: registerData.value.email,
+      PhoneNumber: registerData.value.phoneNumber,
+      Gender: registerData.value.gender,
+      Address: registerData.value.address,
+      DateOfBirth: new Date(registerData.value.DateOfBirth).toISOString(),
+      imageFile:"",
     };
-
-    const response = await api.post("/register", payload);
-    const data = response.data;
-
-    window.location.href = `https://localhost:5173/?userId=${encodeURIComponent(data.userId)}&isAuthenticated=true&isAdmin=false`;
+  console.log(payload);
+    const response = await api.post("User/register", payload,{
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", role);
+      localStorage.setItem("userId", user.id);
+    window.location.href = "https://localhost:5173/";
     clearForm();
   } catch (error) {
     errorMessage.value = error.response?.data?.errorMessages?.[0] || "An error occurred";
@@ -274,7 +422,7 @@ const socialLogin = (provider) => {
           console.error("Facebook login failed", response);
         }
       },
-      { scope: "email,public_profile" }
+      { scope: "email,public_profile" },
     );
   }
 };
@@ -308,6 +456,8 @@ const handleFacebookLogin = async (accessToken) => {
   }
 };
 
-onMounted(loadFacebookSDK);
+onMounted(() => {
+  loadFacebookSDK();
+  fetchProvinces();
+});
 </script>
-

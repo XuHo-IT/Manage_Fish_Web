@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Fish_Manage.Models;
 using Fish_Manage.Models.DTO.Order;
-using Fish_Manage.Models.Momo;
 using Fish_Manage.Repository.DTO;
 using Fish_Manage.Repository.IRepository;
 using Fish_Manage.Service.IService;
@@ -33,7 +32,7 @@ namespace Fish_Manage.Controllers
         }
 
         [HttpPost("CreatePaymentMomo")]
-        public async Task<IActionResult> CreatePaymentMomo([FromBody] OrderInfoModel model)
+        public async Task<IActionResult> CreatePaymentMomo([FromBody] OrderCreateDTO model)
         {
             Console.WriteLine($"[INFO] Received MoMo Payment Request: {JsonConvert.SerializeObject(model)}");
 
@@ -43,7 +42,7 @@ namespace Fish_Manage.Controllers
                 return BadRequest(new { message = "Request body is missing or invalid." });
             }
 
-            if (model.Amount == "")
+            if (model.TotalAmount == "")
             {
                 Console.WriteLine("[ERROR] Invalid payment amount. Amount must be greater than zero.");
                 return BadRequest(new { message = "Invalid payment amount" });
@@ -78,30 +77,86 @@ namespace Fish_Manage.Controllers
                     return BadRequest(new APIResponse { IsSuccess = false, ErrorMessages = new List<string> { "Invalid order data" } });
                 }
 
-                Order order = _mapper.Map<Order>(createDTO);
+                var order = new Order
+                {
+                    OrderId = createDTO.OrderId,
+                    UserId = createDTO.UserId,
+                    OrderDate = createDTO.OrderDate,
+                    TotalAmount = createDTO.TotalAmount,
+                    PaymentMethod = createDTO.PaymentMethod,
+                    Address = createDTO.Address,
+                    Name = createDTO.Name,
+                    Email = createDTO.Email,
+                    PhoneNumber = createDTO.PhoneNumber,
+                    OrderProducts = createDTO.Products.Select(p => new OrderProduct
+                    {
+                        ProductId = p.ProductId,
+                        OrderId = createDTO.OrderId,
+                        Quantity = p.Quantity
+                    }).ToList()
+                };
+
+
+
                 await _paymentCODService.CreateAsync(order);
 
-                var product = await _productRepository.GetByIdAsync(order.ProductId);
+                // Fetch all product details from DB in one call
+                var productIds = createDTO.Products.Select(p => p.ProductId).ToList();
+                var productsInDb = await _productRepository.GetByIdsAsync(productIds);
 
-                if (product != null && product.Quantity > 0)
+                // Check stock availability & update quantity
+                foreach (var orderProduct in createDTO.Products)
                 {
-                    product.Quantity -= createDTO.Quantity;
-                    await _productRepository.UpdateAsync(product);
+                    var product = productsInDb.FirstOrDefault(p => p.ProductId == orderProduct.ProductId);
+                    if (product == null || product.Quantity < orderProduct.Quantity)
+                    {
+                        return BadRequest(new APIResponse
+                        {
+                            IsSuccess = false,
+                            ErrorMessages = new List<string> { $"Insufficient stock for product {orderProduct.ProductId}" }
+                        });
+                    }
+                    product.Quantity -= orderProduct.Quantity;
                 }
-                _response.Result = _mapper.Map<OrderDTO>(order);
-                _response.StatusCode = HttpStatusCode.Created;
 
-                return StatusCode(201, _response);
+                // Batch update product stock
+                await _productRepository.UpdateRangeAsync(productsInDb);
 
-
+                // Return structured response
+                return CreatedAtAction(nameof(CreatePaymentCOD), new APIResponse
+                {
+                    IsSuccess = true,
+                    StatusCode = HttpStatusCode.Created,
+                    Result = new
+                    {
+                        order.OrderId,
+                        order.UserId,
+                        order.OrderDate,
+                        order.TotalAmount,
+                        order.PaymentMethod,
+                        Products = order.OrderProducts.Select(op => new
+                        {
+                            op.Product.ProductId,
+                            op.OrderId,
+                            op.Product.ProductName,
+                            op.Product.Price,
+                            op.Product.Category,
+                            op.Product.Description,
+                            op.Product.Supplier,
+                            op.Product.ImageURl,
+                            Quantity = op.Quantity
+                        }).ToList()
+                    }
+                });
             }
             catch (Exception ex)
             {
-                _response.IsSuccess = false;
-                _response.ErrorMessages = new List<string> { ex.Message };
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-
-                return StatusCode(500, _response);
+                return StatusCode(500, new APIResponse
+                {
+                    IsSuccess = false,
+                    ErrorMessages = new List<string> { ex.Message },
+                    StatusCode = HttpStatusCode.InternalServerError
+                });
             }
         }
 

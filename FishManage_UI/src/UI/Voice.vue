@@ -1,6 +1,8 @@
 <template>
-  <div class="container">
-    <h2>🎙 Search by voice</h2>
+  <div class="container row">
+    <h2 class="col-5" style="padding: 10px 15px; font-size: 16px; margin: 10px">
+      🎙 Search by voice
+    </h2>
 
     <!-- Option 1: File Input -->
     <!-- <div>
@@ -10,7 +12,7 @@
 
     <!-- Option 2: Recording (uncomment if you prefer using MediaRecorder) -->
 
-    <div>
+    <div class="col-6">
       <button @click="startRecording" v-if="!recording">Start Recording</button>
       <button @click="stopRecording" v-else>Stop Recording</button>
     </div>
@@ -26,8 +28,7 @@
 import { ref } from "vue";
 import axios from "axios";
 import api from "@/js/api_auth.js";
-import {eventBus} from "@/js/eventBus.js"
-
+import { eventBus } from "@/js/eventBus.js";
 
 // Reactive variables
 const selectedFile = ref(null);

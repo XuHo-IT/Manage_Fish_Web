@@ -78,6 +78,10 @@
                 <th>Username</th>
                 <th>Name</th>
                 <th>Email</th>
+                <th>PhoneNumber</th>
+                <th>Gender</th>
+                <th>DateOfBirth</th>
+                <th>Address</th>
                 <th>Current Role</th>
                 <th>Change Role</th>
               </tr>
@@ -91,10 +95,18 @@
                 <td>{{ user.userName }}</td>
                 <td>{{ user.name }}</td>
                 <td>{{ user.email }}</td>
+                <td>{{ user.phoneNumber }}</td>
+                <td>{{ user.gender }}</td>
+                <td>{{ user.dateOfBirth }}</td>
+                <td>{{ user.address }}</td>
                 <td>{{ user.role }}</td>
                 <td class="text-end">
                   <select v-model="user.role" @change="updateUserRole(user)">
-                    <option v-for="selectedRole in roles" :key="selectedRole" :value="selectedRole">
+                    <option
+                      v-for="selectedRole in roles"
+                      :key="selectedRole"
+                      :value="selectedRole || user.role"
+                    >
                       {{ selectedRole }}
                     </option>
                   </select>
@@ -110,7 +122,7 @@
 
 <script setup>
 import { ref, onMounted, defineAsyncComponent, nextTick } from "vue";
-import axios from "axios";
+import api from "@/js/api_auth.js";
 
 // Lazy-load VueApexCharts to ensure it's available
 const VueApexCharts = defineAsyncComponent(() => import("vue3-apexcharts"));
@@ -120,8 +132,6 @@ const totalViews = ref(0);
 const totalSessions = ref(0);
 const series = ref([]);
 const isChartReady = ref(false);
-const apiAnalyticsUrl = "https://localhost:7229/api/Analytics";
-const userurl = "https://localhost:7229/api/User";
 const roles = ref(["Admin", "Customer"]);
 const selectedRole = ref([]);
 
@@ -145,25 +155,21 @@ const chartOptions = ref({
 
 const updateUserRole = async (user) => {
   try {
-    const responseUser = await axios.get(`${userurl}/${user.id}`);
-    if (responseUser.data) {
-      const updatedUser = {
-        ...user,
-        role: user.role,
-      };
+    const updatedRole = { role: user.role };
 
-      await axios.put(`${userurl}/${user.id}`, updatedUser);
+    await api.put(`User/UserRole/${user.id}`, updatedRole, {
+      headers: { "Content-Type": "application/json" },
+    });
 
-      alert(`Updated role for ${updatedUser.userName} to ${updatedUser.role}`);
-    }
+    alert(`Updated role for ${user.userName} to ${user.role}`);
   } catch (error) {
-    alert("Error updating user role: " + error);
+    alert("Error updating user role: " + error.response?.data?.message || error.message);
   }
 };
 
 const fetchVisitorData = async () => {
   try {
-    const response = await axios.get(`${apiAnalyticsUrl}/GetAnalytics`);
+    const response = await api.get("GetAnalytics");
     if (response.data) {
       totalViews.value = response.data.totalViews;
       totalSessions.value = response.data.activeSessions;
@@ -186,7 +192,7 @@ const fetchVisitorData = async () => {
 // Fetch user data
 const fetchUser = async () => {
   try {
-    const response = await axios.get(`${userurl}`);
+    const response = await api.get("User");
     if (response.data) {
       users.value = response.data.result;
     }

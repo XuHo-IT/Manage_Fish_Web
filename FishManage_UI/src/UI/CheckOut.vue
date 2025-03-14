@@ -145,22 +145,20 @@ const isAdmin = ref(false);
 const userId = ref(null);
 
 const loadAuthState = () => {
-  const params = new URLSearchParams(window.location.search);
-
-  const token = localStorage.getItem("token") || params.get("token");
-  const userIdParam = localStorage.getItem("userId") || params.get("userId");
-  const role = localStorage.getItem("isAdmin") || params.get("isAdmin");
-  if (userIdParam) userId.value = userIdParam;
-  isAuthenticated.value = params.get("isAuthenticated") === "true";
-  isAdmin.value = role === "true";
-};
+      const authenticated = localStorage.getItem("token");
+      isAuthenticated.value = !!authenticated;
+      const userIdParam = localStorage.getItem("userId");
+      userId.value = userIdParam;
+      const role =localStorage.getItem("role");
+      if (role == "admin") isAdmin.value = "true";  
+    };
 const cart = ref([]);
 const total = ref(0);
 const userInfo = ref({
+  userId: localStorage.getItem("userId") || "",
   FullName: "",
   phoneNumber: "",
   address: "",
-  city: "",
   zipCode: "",
   email: "",
 });
@@ -179,11 +177,11 @@ const coupons = ref([]);
 const selectedCouponCode = ref("");
 const selectedCoupon = ref(null);
 const newTotal = ref(0);
-
+const users = ref([]);
 const fetchCoupons = async () => {
   try {
     const response = await api.get("CouponModel");
-    const data = await response.json();
+    const data = await response.data;
     if (data.isSuccess) {
       coupons.value = data.result;
       console.log(coupons.value);
@@ -268,13 +266,12 @@ const checkCoupon = async () => {
     couponId: selectedCoupon.value.couponId,
   };
 
-
   try {
-    const response = await api.post("CouponModel/ApplyDiscount",requestData);
+    const response = await api.post("CouponModel/ApplyDiscount", requestData);
 
-    const data = await response.json();
+    const data = await response.data;
 
-    if (response.ok) {
+    if (response.status === 200) {
       newTotal.value = data.newTotal.toFixed(2).toString();
     } else {
       alert("Failed to apply the coupon.");
@@ -284,62 +281,167 @@ const checkCoupon = async () => {
     alert("An error occurred while applying the coupon.");
   }
 };
+const fetchUserById = async () => {
+  try {
+    const response = await api.get(`User/${localStorage.getItem("userId")}`);
+    const data = response.data; 
+    if (!data) {
+      console.error("Invalid user data:", data);
+      return null;
+    }
+    return data.result; 
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    return null; 
+  }
+};
 
 const createPaymentByCOD = async () => {
-  try {
-    const response = await api.post("PaymentAPI/CreatePaymentCOD", 
-    JSON.stringify({
-        userId: localStorage.getItem("userId") || new Date().getTime().toString(),
-        orderDate: new Date().toISOString(),
-        totalAmount: newTotal.value.toString(),
-        paymentMethod: "COD",
-        productId: cart.value.map((item) => item.productId).join(","),
-        quantity: cart.value.reduce((sum, item) => sum + item.quantity, 0),
-        unitPrice: cart.value.reduce((sum, item) => sum + item.price, 0),
-      }),
-    );
-    const textResponse = await response.json();
-    router.push({
-      name: "CallBack",
-      query: {
-        orderId: textResponse.result.orderId,
-        userId: textResponse.result.userId,
-        amount: newTotal.value.toString(),
-        payType: textResponse.result.paymentMethod,
-        status: textResponse.isSuccess ? "success" : "failed",
-      },
-    });
+  if (isAuthenticated.value = true) {
+    try {
+      const user = await fetchUserById();
+      console.log("User"+user);
+      const cartItems = JSON.parse(localStorage.getItem("cart") || "[]");
+      console.log(cartItems);
+      const response = await api.post(
+        "PaymentAPI/CreatePaymentCOD",
+     {
+          orderId: new Date().getTime().toString(),
+          userId: localStorage.getItem("userId"),
+          name: user.name,
+          address: user.address,
+          email: user.email,
+          phoneNumber: user.phoneNumber,
+          totalAmount: Math.round(newTotal.value * 25.475 * 10000).toString(),
+          paymentMethod: "COD",
+          products: cartItems.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+          })),
+        },
+      );
+      const textResponse = await response.data;
+      router.push({
+        name: "CallBack",
+        query: {
+          orderId: textResponse.result.orderId,
+          userId: textResponse.result.userId,
+          amount: newTotal.value.toString(),
+          payType: textResponse.result.paymentMethod,
+          status: textResponse.isSuccess ? "success" : "failed",
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error(textResponse);
+      if (!response.ok) {
+        throw new Error(textResponse);
+      }
+    } catch (error) {
+      console.error("Error creating payment:", error);
     }
-  } catch (error) {
-    console.error("Error creating payment:", error);
+  } else {
+    try {
+      const cartItems = JSON.parse(localStorage.getItem("cart") || "[]");
+      console.log(cartItems);
+      const response = await api.post(
+        "PaymentAPI/CreatePaymentCOD",
+        JSON.stringify({
+          orderId: new Date().getTime().toString(),
+          userId: new Date().getTime().toString() + Math.floor(Math.random() * 1000),
+          name: userInfo.value.FullName,
+          address: userInfo.value.address,
+          email: userInfo.value.email,
+          phoneNumber: userInfo.value.phoneNumber,
+          orderDate: new Date().toISOString(),
+          totalAmount: Math.round(newTotal.value * 25.475 * 10000).toString(),
+          paymentMethod: "COD",
+          products: cartItems.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+          })),
+        }),
+      );
+      const textResponse = await response.data;
+      router.push({
+        name: "CallBack",
+        query: {
+          orderId: textResponse.result.orderId,
+          userId: textResponse.result.userId,
+          amount: newTotal.value.toString(),
+          payType: textResponse.result.paymentMethod,
+          status: textResponse.isSuccess ? "success" : "failed",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(textResponse);
+      }
+    } catch (error) {
+      console.error("Error creating payment:", error);
+    }
   }
 };
+
 const createPayment = async () => {
-  try {
-    const response = await api.post("PaymentAPI/CreatePaymentMomo",  JSON.stringify({
-        FullName: userInfo.value.FullName,
-        OrderId: new Date().getTime().toFixed(2),
-        Orderinformation: userInfo.value.toString(),
-        Amount: newTotal.value.toString(),
-      }),
-    );
+  if (isAuthenticated.value = true) {
+    try {
+      const user = await fetchUserById();
+      const cartItems = JSON.parse(localStorage.getItem("cart") || "[]");
+      const response = await api.post("PaymentAPI/CreatePaymentMomo", {
+        orderId: new Date().getTime().toString(),
+        userId: localStorage.getItem("userId"),
+        name: user.name,
+        address: user.address,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        orderDate: new Date().toLocaleString(),
+        totalAmount: Math.round(newTotal.value * 25.475 * 10000).toString(),
+        paymentMethod: "MoMo",
+        products: cartItems.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+        })),
+      });
 
-    const textResponse = await response.text();
-    console.log("Server response:", textResponse);
+      console.log("Server response:", response.data);
 
-    if (!response.ok) {
-      throw new Error(textResponse);
+      if (!response.data || !response.data.payUrl) {
+        throw new Error("Invalid response from server");
+      }
+      window.location.href = response.data.payUrl;
+    } catch (error) {
+      console.error("Error creating payment:", error);
     }
+  } else {
+    try {
+      const cartItems = JSON.parse(localStorage.getItem("cart") || "[]");
+      const response = await api.post("PaymentAPI/CreatePaymentMomo", {
+        orderId: new Date().getTime().toString(),
+        userId: new Date().getTime().toString(),
+        name: userInfo.value.FullName,
+        address: userInfo.value.address,
+        email: userInfo.value.email,
+        phoneNumber: userInfo.value.phoneNumber,
+        orderDate: new Date().toLocaleString(),
+        totalAmount: Math.round(newTotal.value * 25.475 * 10000).toString(),
+        paymentMethod: "MoMo",
+        products: cartItems.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+        })),
+      });
 
-    const data = JSON.parse(textResponse);
-    window.location.href = data.payUrl;
-  } catch (error) {
-    console.error("Error creating payment:", error);
+      console.log("Server response:", response.data);
+
+      if (!response.data || !response.data.payUrl) {
+        throw new Error("Invalid response from server");
+      }
+      window.location.href = response.data.payUrl;
+    } catch (error) {
+      console.error("Error creating payment:", error);
+    }
   }
 };
+
 onMounted(() => {
   const cartData = localStorage.getItem("cart");
   const totalData = localStorage.getItem("total");
