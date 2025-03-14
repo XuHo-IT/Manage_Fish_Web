@@ -63,77 +63,69 @@
   </section>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      name: "",
-      email: "",
-      message: "",
-      isSubmitting: false,
-    };
-  },
-  methods: {
-    async requestCoupon() {
-      if (this.isSubmitting) return;
-      this.isSubmitting = true;
+<script setup>
+import api from "@/js/api_auth.js";
+import { ref, onMounted } from "vue";
 
-      if (document.cookie.includes("couponReceived=true")) {
-        this.message = "You have already received a coupon.";
-        this.isSubmitting = false;
-        return;
-      }
+const name = ref();
+const email = ref();
+const message = ref();
+const isSubmitting = ref(false);
 
-      try {
-        const response = await fetch("https://localhost:7229/api/CouponModel", {
-          method: "GET",
-        });
-        const coupons = await response.json();
+const requestCoupon = async () => {
+  if (isSubmitting.value) return;
+  isSubmitting.value = "true";
 
-        if (!coupons.isSuccess) {
-          this.message = "No coupons available at the moment.";
-          this.isSubmitting = false;
-          return;
-        }
-        
-        const validCoupons = coupons.result.filter((coupon) => coupon.quantity > 0);
+  if (document.cookie.includes("couponReceived=true")) {
+    message.value = "You have already received a coupon.";
+    isSubmitting.value = "false";
+    return;
+  }
 
-        if (validCoupons.length === 0) {
-          this.message = "No valid coupons available.";
-          return;
-        }
+  try {
+    const response = await api.get("CouponModel");
+    const coupons = await response.data;
 
-        const randomCoupon =
-          validCoupons[Math.floor(Math.random() * validCoupons.length)].couponCode;
+    if (!coupons.isSuccess) {
+      message.value = "No coupons available at the moment.";
+      isSubmitting.value = "false";
+      return;
+    }
 
-        console.log(randomCoupon);
+    const validCoupons = coupons.result.filter((coupon) => coupon.quantity > 0);
 
-        const sendResponse = await fetch("https://localhost:7229/api/CouponModel/FirstCoupon", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: this.email,
-            subject: "Hi" + this.name + "Here is your first coupon! Enjoy your discount!",
-            message: `Your coupon code is: ${randomCoupon}`,
-          }),
-        });
+    if (validCoupons.length === 0) {
+      message.value = "No valid coupons available.";
+      return;
+    }
 
-        const result = await sendResponse.json();
+    const randomCoupon = validCoupons[Math.floor(Math.random() * validCoupons.length)].couponCode;
 
-        if (sendResponse.ok) {
-          this.message = "Coupon sent successfully! Check your email.";
-          document.cookie = "couponReceived=true; max-age=31536000"; // 1 year expiry
-        } else {
-          this.message = result.message || "Failed to send coupon.";
-        }
-      } catch (error) {
-        console.error("Error:", error);
-        this.message = "An error occurred while processing your request.";
-      }
+    console.log(randomCoupon);
 
-      this.isSubmitting = false;
-    },
-  },
+    const sendResponse = await api.post(
+      "CouponModel/FirstCoupon",
+      JSON.stringify({
+        email: this.email,
+        subject: "Hi" + this.name + "Here is your first coupon! Enjoy your discount!",
+        message: `Your coupon code is: ${randomCoupon}`,
+      }),
+    );
+
+    const result = await sendResponse.data();
+
+    if (sendResponse.ok) {
+      this.message = "Coupon sent successfully! Check your email.";
+      document.cookie = "couponReceived=true; max-age=31536000"; // 1 year expiry
+    } else {
+      this.message = result.message || "Failed to send coupon.";
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    this.message = "An error occurred while processing your request.";
+  }
+
+  isSubmitting.value = false;
 };
 </script>
 

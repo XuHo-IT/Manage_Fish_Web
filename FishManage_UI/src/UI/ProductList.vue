@@ -1,36 +1,56 @@
 <template>
   <div>
- 
-    <div class="search-bar row bg-light p-2 rounded-4">
-      <div class="col-md-4 d-none d-md-block">
+    <div class="d-flex flex-wrap align-items-center  p-2 rounded-4">
+      <!-- Search Bar -->
+      <div class="col-md-4 d-none d-md-block p-2">
         <router-view></router-view>
         <Voice />
+        <div class="col-md-12" style="box-shadow: red">
+          <form @submit.prevent="handleSearch" id="search-form" class="text-center">
+            <input
+              v-model="searchTerm"
+              type="text"
+              class="form-control border-0 bg-transparent"
+              placeholder="Search for products name"
+            />
+          </form>
+        </div>
       </div>
-      <div class="col-11 col-md-7">
-        <form id="search-form" class="text-center" action="index.html" method="post">
+
+      <!-- Sort Order Dropdown -->
+      <div class="col-md-4 p-2">
+        <label for="sortOrder" class="form-label">Sort by:</label>
+        <select v-model="sortOrder" @change="fetchSortedProducts" class="form-select">
+          <option value="default">Default</option>
+          <option value="asc">Price: Low to High</option>
+          <option value="desc">Price: High to Low</option>
+        </select>
+      </div>
+
+      <!-- Price Range Slider -->
+      <div class="col-md-4 p-2">
+        <p>Price Range: ${{ minPrice }} - ${{ maxPrice }}</p>
+        <div class="slider d-flex">
           <input
-            v-model="searchTerm"
-            type="text"
-            class="form-control border-0 bg-transparent"
-            placeholder="Search for more than 20,000 products"
+            type="range"
+            v-model="minPrice"
+            min="0"
+            max="50"
+            @input="fetchSortedProducts"
+            class="form-range me-2"
           />
-        </form>
-      </div>
-      <div class="col-1">
-        <svg
-          @click="handleSearch"
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-        >
-          <path
-            fill="currentColor"
-            d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0a1 1 0 0 0 0-1.39ZM11 18a7 7 0 1 1 7-7a7 7 0 0 1-7 7Z"
+          <input
+            type="range"
+            v-model="maxPrice"
+            min="51"
+            max="100"
+            @input="fetchSortedProducts"
+            class="form-range"
           />
-        </svg>
+        </div>
       </div>
     </div>
+
     <ul class="d-flex justify-content-end list-unstyled m-0">
       <!-- Separate Section for Auth Modal -->
       <li></li>
@@ -69,25 +89,6 @@
         <button class="btn btn-primary w-100 mt-3" @click="checkout">Proceed to Checkout</button>
       </div>
     </div>
-    <div class="mb-3">
-      <label for="sortOrder" class="form-label">Sort by:</label>
-      <select v-model="sortOrder" @change="fetchSortedProducts" class="form-select">
-        <option value="default">Default</option>
-        <option value="asc">Price: Low to High</option>
-        <option value="desc">Price: High to Low</option>
-        <option value="oldest">Oldest First</option>
-        <option value="newest">Newest First</option>
-      </select>
-    </div>
-
-    <div class="slider-container">
-      <p>Price Range: ${{ minPrice }} - ${{ maxPrice }}</p>
-
-      <div class="slider">
-        <input type="range" v-model="minPrice" min="0" max="50" @input="fetchSortedProducts" />
-        <input type="range" v-model="maxPrice" min="51" max="100" @input="fetchSortedProducts" />
-      </div>
-    </div>
 
     <button v-if="isAuthenticated && isAdmin" @click="showCreateProduct" class="btn btn-primary">
       Create Product
@@ -112,12 +113,6 @@
 
     <div class="row row-product">
       <div class="col-md-12">
-        <!-- <div class="d-flex justify-content-center gap-3 mb-3">
-          <button @click="filterProducts('cat')" class="btn btn-outline-primary">Cat</button>
-          <button @click="filterProducts('dog')" class="btn btn-outline-success">Dog</button>
-          <button @click="filterProducts('produtcs')" class="btn btn-outline-warning">Fish</button>
-          <button @click="filterProducts('all')" class="btn btn-outline-dark">All</button>
-        </div> -->
         <div class="swiper">
           <div class="swiper-wrapper">
             <div class="product-item swiper-slide">
@@ -218,6 +213,8 @@
       </div>
     </div>
   </div>
+  <router-view></router-view>
+  <ChatBot />
 </template>
 
 <style scoped>
@@ -279,6 +276,7 @@ import CreateProduct from "./CreateProduct.vue";
 import EditProduct from "./EditProduct.vue";
 import CreateCoupon from "./CreateCoupon.vue";
 import Voice from "./Voice.vue";
+import ChatBot from "./ChatBot.vue";
 import { eventBus } from "@/js/eventBus.js";
 
 const minPrice = ref(0);
@@ -301,15 +299,12 @@ const isAdmin = ref(false);
 const userId = ref(null);
 
 const loadAuthState = () => {
-  const params = new URLSearchParams(window.location.search);
-
-  token.value = localStorage.getItem("token");
-  const userIdParam = params.get("userId");
-  const role = params.get("isAdmin");
-
-  if (userIdParam) userId.value = userIdParam;
-  isAuthenticated.value = !!token;
-  isAdmin.value = role === "true";
+  const authenticated = localStorage.getItem("token");
+  isAuthenticated.value = !!authenticated;
+  const userIdParam = localStorage.getItem("userId");
+  userId.value = userIdParam;
+  const role = localStorage.getItem("role");
+  if (role == "admin") isAdmin.value = "true";
 };
 
 onMounted(() => {
@@ -380,11 +375,11 @@ const fetchSortedProducts = async () => {
     }
 
     const apiUrl = `${apiEndpoint}?min=${minPrice.value}&max=${maxPrice.value}&searchTerm=${encodeURIComponent(searchTerm.value) || eventBus.result}`;
-    console.log("busss:" + eventBus.result);
     const response = await api.get(apiUrl);
 
     if (response.data.isSuccess) {
       products.value = response.data.result;
+      console.log("data:" , response.data.result);
     } else {
       console.error("Error fetching data:", response.data.errorMessages);
     }
@@ -394,10 +389,7 @@ const fetchSortedProducts = async () => {
 };
 
 const deleteProduct = async (productId) => {
-  if (!token.value) {
-    alert("Authentication token is missing. Please log in again.");
-    return;
-  }
+
 
   try {
     await api.delete(`/FishProductAPI/${productId}`);
@@ -429,7 +421,7 @@ const trackView = async () => {
 
 const startSession = async () => {
   try {
-    await axios.post(`${api}/Analytics/StartSession`);
+    await api.post("Analytics/StartSession");
   } catch (error) {
     console.error("Error starting session:", error);
   }

@@ -2,11 +2,13 @@
 using Fish_Manage.Models;
 using Fish_Manage.Models.DTO.User;
 using Fish_Manage.Repository.IRepository;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Fish_Manage.Repository
@@ -123,15 +125,21 @@ namespace Fish_Manage.Repository
         }
 
 
-        public async Task<ApplicationUser> Register(RegisterationRequestDTO model)
+        public async Task<ApplicationUser> Register(RegisterationRequestDTO model, string img)
         {
             var user = new ApplicationUser
             {
                 UserName = model.UserName,
                 Email = model.Email,
-                Name = model.Name,
+                Name = model.FullName,
                 NormalizedEmail = model.Email.ToUpper(),
                 EmailConfirmed = true,
+                PhoneNumber = model.PhoneNumber,
+                Gender = model.Gender,
+                Address = model.Address,
+                DateOfBirth = model.DateOfBirth,
+                ImageUrl = img,
+
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
@@ -143,11 +151,66 @@ namespace Fish_Manage.Repository
             return user;
         }
 
+
         public async Task<ApplicationUser> UpdateAsync(ApplicationUser user)
         {
             _db.Entry(user).State = EntityState.Modified;
             await _db.SaveChangesAsync();
             return user;
+        }
+        public async Task<bool> UpdateUserAsync(UserUpdateDTO dto)
+        {
+            var user = await _userManager.FindByIdAsync(dto.Id);
+            if (user == null)
+                return false;
+
+            // Update fields
+            user.UserName = dto.UserName;
+            user.Name = dto.Name;
+            user.Email = dto.Email;
+            user.PhoneNumber = dto.PhoneNumber;
+            user.Gender = dto.Gender;
+            user.DateOfBirth = dto.DateOfBirth;
+            user.Address = dto.Address;
+
+            // Update role if necessary
+            var currentRoles = await _userManager.GetRolesAsync(user);
+            if (!currentRoles.Contains(dto.Role))
+            {
+                await _userManager.RemoveFromRolesAsync(user, currentRoles);
+                await _userManager.AddToRoleAsync(user, dto.Role);
+            }
+
+            // Update password if provided
+            if (!string.IsNullOrWhiteSpace(dto.NewPassword))
+            {
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var result = await _userManager.ResetPasswordAsync(user, token, dto.NewPassword);
+                if (!result.Succeeded)
+                    return false;
+            }
+
+            var updateResult = await _userManager.UpdateAsync(user);
+            return updateResult.Succeeded;
+        }
+
+
+        private string HashPassword(string password)
+        {
+            byte[] salt = new byte[16];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(salt);
+            }
+
+            string hashed = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+                password: password,
+                salt: salt,
+                prf: KeyDerivationPrf.HMACSHA256,
+                iterationCount: 10000,
+                numBytesRequested: 32));
+
+            return $"{Convert.ToBase64String(salt)}:{hashed}"; // Store salt and hash
         }
     }
 }

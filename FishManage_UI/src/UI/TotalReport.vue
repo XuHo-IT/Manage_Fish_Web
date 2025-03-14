@@ -51,77 +51,53 @@
     </div>
   </div>
 </template>
-<script>
-import axios from "axios";
+<script setup>
+import { ref,onMounted } from "vue";
+import api from "@/js/api_auth.js";
 
-const apiUser = "https://localhost:7229/api/User";
-const apiProduct = "https://localhost:7229/api/FishProductAPI";
-const apiOrder = "https://localhost:7229/api/FishOrderAPI";
-export default {
-  name: "TotalReport",
+const totalUsers = ref(0);
+const totalProducts = ref(0);
+const totalOrders = ref(0);
+const isAuthenticated = ref(false);
+const isAdmin = ref(false);
+const userId = ref(null);
 
-  data() {
-    return {
-      totalUsers: 0,
-      totalProducts: 0,
-      totalOrders: 0,
-      totalViews: 0,
-      activeSessions: 0,
-    };
-  },
-  methods: {
-    loadAuthState() {
-      const params = new URLSearchParams(window.location.search);
-
-      const token = localStorage.getItem("token");
-      const userIdParam = params.get("userId");
-      const role = params.get("isAdmin");
-      const idFortest =localStorage.getItem("userId");
-
-
-      console.log("URL Params:", { token, userIdParam, role,idFortest });
-
-      if (userIdParam) this.userId = userIdParam; // Fix here
-      this.isAuthenticated = params.get("isAuthenticated") === "true"; // Fix here
-      this.isAdmin = role === "true"; // Fix here
-    },
-
-    async getTotalUsers() {
-      try {
-        const response = await axios.get(apiUser);
-        this.totalUsers = response.data.result.length;
-      } catch (error) {
-        console.error("Error fetching total users:", error);
-      }
-    },
-    async getTotalProducts() {
-      try {
-        const response = await axios.get(apiProduct);
-        this.totalProducts = response.data.result.length;
-      } catch (error) {
-        console.error("Error fetching total products:", error);
-      }
-    },
-    async getTotalOrders() {
-      try {
-        const token = localStorage.getItem("token"); 
-        console.log("token: " + token);
-        const response = await axios.get(apiOrder, {
-          headers: {
-            Authorization: `Bearer ${token}`, 
-          },
-        });
-        this.totalOrders = response.data.result.length;
-      } catch (error) {
-        console.error("Error fetching total orders:", error);
-      }
-    },
-  },
-  mounted() {
-    this.loadAuthState();
-    this.getTotalUsers();
-    this.getTotalProducts();
-    this.getTotalOrders();
-  },
+const loadAuthState = () => {
+  const authenticated = localStorage.getItem("token");
+  isAuthenticated.value = !!authenticated;
+  const userIdParam = localStorage.getItem("userId");
+  userId.value = userIdParam;
+  const role = localStorage.getItem("role");
+  if (role == "admin") isAdmin.value = "true";
 };
+const getTotalUsers = async () => {
+  try {
+    const response = await api.get("/User");
+    totalUsers.value = response.data.result.length;
+  } catch (error) {
+    console.error("Error fetching total users:", error);
+  }
+};
+const getTotalProducts = async () => {
+  try {
+    const response = await api.get("FishProductAPI");
+    totalProducts.value = response.data.result.length;
+  } catch (error) {
+    console.error("Error fetching total products:", error);
+  }
+};
+const getTotalOrders = async () => {
+  try {
+    const response = await api.get("FishOrderAPI");
+    totalOrders.value = response.data.result.length;
+  } catch (error) {
+    console.error("Error fetching total orders:", error);
+  }
+};
+onMounted(() => {
+  loadAuthState();
+  getTotalUsers();
+  getTotalProducts();
+  getTotalOrders();
+});
 </script>

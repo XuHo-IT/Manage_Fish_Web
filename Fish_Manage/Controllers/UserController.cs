@@ -6,11 +6,15 @@ using Fish_Manage.Models.DTO.User;
 using Fish_Manage.Repository;
 using Fish_Manage.Repository.DTO;
 using Fish_Manage.Repository.IRepository;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Net;
+using System.Security.Claims;
 
 namespace Fish_Manage.Controllers
 {
@@ -56,7 +60,12 @@ namespace Fish_Manage.Controllers
                     UserName = user.UserName,
                     Name = user.Name,
                     Email = user.Email,
-                    Role = roles.FirstOrDefault() ?? "customer"
+                    Role = roles.FirstOrDefault() ?? "customer",
+                    PhoneNumber = user.PhoneNumber,
+                    Address = user.Address,
+                    DateOfBirth = user.DateOfBirth,
+                    Gender = user.Gender,
+                    ImageUrl = user.ImageUrl,
                 });
             }
 
@@ -92,7 +101,11 @@ namespace Fish_Manage.Controllers
                     UserName = user.UserName,
                     Email = user.Email,
                     Name = user.Name,
-                    Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? "customer"
+                    Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? "customer",
+                    PhoneNumber = user.PhoneNumber,
+                    Gender = user.Gender,
+                    DateOfBirth = user.DateOfBirth,
+                    Address = user.Address,
                 }
             };
 
@@ -109,7 +122,10 @@ namespace Fish_Manage.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Register([FromBody] RegisterationRequestDTO model)
+        public async Task<IActionResult> Register(
+     [FromForm] RegisterationRequestDTO model,
+     IFormFile? imageFile,
+     [FromServices] CloudinaryService cloudinaryService)
         {
             if (!_userRepo.IsUniqueUser(model.UserName))
             {
@@ -121,8 +137,20 @@ namespace Fish_Manage.Controllers
                 });
             }
 
-            var user = await _userRepo.Register(model);
-            if (user == null)
+            var user = _mapper.Map<ApplicationUser>(model);
+
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                user.ImageUrl = await cloudinaryService.UploadImageAsync(imageFile);
+            }
+            else
+            {
+                user.ImageUrl = "https://default-image-url.com/default.png";
+            }
+
+            var registeredUser = await _userRepo.Register(model, user.ImageUrl);
+
+            if (registeredUser == null)
             {
                 return BadRequest(new APIResponse
                 {
@@ -132,24 +160,79 @@ namespace Fish_Manage.Controllers
                 });
             }
 
-            var token = await _jwtService.GenerateToken(user);
+
+            // ✅ Generate JWT token
+            var token = await _jwtService.GenerateToken(registeredUser);
+
             return Ok(new APIResponse
             {
-                StatusCode = HttpStatusCode.OK,
+                StatusCode = HttpStatusCode.Created,
                 IsSuccess = true,
                 Result = new LoginResponseDTO
                 {
                     Token = token,
                     User = new UserDTO
                     {
-                        Id = user.Id,
-                        UserName = user.UserName,
-                        Name = user.Name,
-                        Role = model.Role
+                        Id = registeredUser.Id,
+                        UserName = registeredUser.UserName,
+                        Name = registeredUser.Name,
+                        Role = model.Role,
+                        Gender = registeredUser.Gender,
+                        DateOfBirth = registeredUser.DateOfBirth,
+                        Address = registeredUser.Address,
+                        ImageUrl = user.ImageUrl,
+                        Email = registeredUser.Email,
+                        PhoneNumber = registeredUser.PhoneNumber
                     }
                 }
             });
         }
+        [HttpPut("UserRole/{id}")]
+        public async Task<IActionResult> UpdateUserRole(string id, [FromBody] UpdateUserRoleDto model)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found" });
+            }
+
+            // Remove old roles
+            var existingRoles = await _userManager.GetRolesAsync(user);
+            await _userManager.RemoveFromRolesAsync(user, existingRoles);
+
+            // Add new role
+            var result = await _userManager.AddToRoleAsync(user, model.Role);
+            if (!result.Succeeded)
+            {
+                return BadRequest(new { message = "Failed to update role", errors = result.Errors });
+            }
+
+            return Ok(new { message = "Role updated successfully" });
+        }
+
+        // DTO for role update request
+        public class UpdateUserRoleDto
+        {
+            public string Role { get; set; }
+        }
+        [HttpPost("ChangePassword")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto model)
+        {
+            var user = await _userManager.FindByIdAsync(model.UserId);
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found" });
+            }
+
+            var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+            if (!result.Succeeded)
+            {
+                return BadRequest(new { message = "Failed to change password", errors = result.Errors });
+            }
+
+            return Ok(new { message = "Password changed successfully" });
+        }
+
 
         [HttpPost("login-facebook")]
         public async Task<IActionResult> FacebookLogin([FromBody] FacebookLoginRequestDTO request)
@@ -204,25 +287,82 @@ namespace Fish_Manage.Controllers
             return NoContent();
         }
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(string id, [FromBody] UserUpdateDTO updateDTO)
+        public async Task<ActionResult<APIResponse>> UpdateUser(
+    string id,
+    [FromForm] UserUpdateDTO updateDTO,
+    IFormFile imageFile,
+    [FromServices] CloudinaryService cloudinaryService)
         {
-            if (updateDTO == null || id != updateDTO.Id) return BadRequest();
+            if (updateDTO == null || id != updateDTO.Id)
+            {
+                return BadRequest(new APIResponse
+                {
+                    IsSuccess = false,
+                    ErrorMessages = new List<string> { "Invalid user data" }
+                });
+            }
 
             var user = await _userRepo.GetAsync(u => u.Id == id);
-            if (user == null) return NotFound();
+            if (user == null)
+            {
+                return NotFound(new APIResponse
+                {
+                    IsSuccess = false,
+                    ErrorMessages = new List<string> { "User not found" }
+                });
+            }
 
             user.UserName = updateDTO.UserName;
             user.Name = updateDTO.Name;
             user.Email = updateDTO.Email;
+            user.PhoneNumber = updateDTO.PhoneNumber;
+            user.Gender = updateDTO.Gender;
+            user.Address = updateDTO.Address;
+            user.DateOfBirth = updateDTO.DateOfBirth;
+
+            if (!string.IsNullOrEmpty(updateDTO.NewPassword))
+            {
+                var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var resetResult = await _userManager.ResetPasswordAsync(user, resetToken, updateDTO.NewPassword);
+
+                if (!resetResult.Succeeded)
+                {
+                    return BadRequest(new APIResponse
+                    {
+                        IsSuccess = false,
+                        ErrorMessages = new List<string> { "Password reset failed" }
+                    });
+                }
+            }
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                string uploadedImageUrl = await cloudinaryService.UploadImageAsync(imageFile);
+                if (!string.IsNullOrEmpty(uploadedImageUrl))
+                {
+                    user.ImageUrl = uploadedImageUrl;
+                }
+            }
 
             var currentRoles = await _userManager.GetRolesAsync(user);
-            await _userManager.RemoveFromRolesAsync(user, currentRoles);
-            await _userManager.AddToRoleAsync(user, updateDTO.Role);
+            if (!currentRoles.Contains(updateDTO.Role))
+            {
+                await _userManager.RemoveFromRolesAsync(user, currentRoles);
+                await _userManager.AddToRoleAsync(user, updateDTO.Role);
+            }
+
 
             await _userRepo.UpdateAsync(user);
+            await _userRepo.SaveAsync();
 
-            return NoContent();
+            return Ok(new APIResponse
+            {
+                IsSuccess = true,
+                StatusCode = HttpStatusCode.NoContent,
+                ErrorMessages = new List<string> { "User updated successfully" }
+            });
         }
+
+
         [HttpPost("forgotPass")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDTO request)
         {
@@ -253,6 +393,8 @@ namespace Fish_Manage.Controllers
                 Result = "Password reset email sent successfully."
             });
         }
+
+
         [HttpGet("{id}", Name = "GetUser")]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -275,7 +417,6 @@ namespace Fish_Manage.Controllers
                     return NotFound(_response);
                 }
                 var currentRoles = await _userManager.GetRolesAsync(user);
-
                 var userDTO = _mapper.Map<UserDTO>(user);
                 userDTO.Role = currentRoles.FirstOrDefault();
 
@@ -292,6 +433,8 @@ namespace Fish_Manage.Controllers
             }
             return _response;
         }
+
+
         [HttpPost("resetPass")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO model)
         {
@@ -324,24 +467,73 @@ namespace Fish_Manage.Controllers
                 Result = "Password has been successfully reset."
             });
         }
-        //public async Task<IActionResult> GoogleResponse()
-        //{
-        //    var result = await HttpContext
-        //        .AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        //    var claim = result.Principal.Identities.FirstOrDefault().Claims.Select(claim => new
-        //    {
-        //        claim.Issuer,
-        //        claim.OriginalIssuer,
-        //        claim.Type,
-        //        claim.Value
-        //    });
-        //    return Ok(new APIResponse
-        //    {
-        //        StatusCode = HttpStatusCode.OK,
-        //        IsSuccess = true,
-        //        Result = claim
-        //    });
-        //}
 
+
+        [HttpGet("loginGoogle")]
+        public IActionResult LoginWithGoogle()
+        {
+            var redirectUrl = Url.Action(nameof(GoogleResponse), "GoogleAuth");
+            var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
+            return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+        }
+
+        [HttpGet("google-response")]
+        public async Task<IActionResult> GoogleResponse()
+        {
+            var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            if (result?.Principal == null)
+            {
+                return Unauthorized(new { message = "Google authentication failed" });
+            }
+
+            // Extract user information from Google login
+            var email = result.Principal.FindFirst(ClaimTypes.Email)?.Value;
+            var name = result.Principal.FindFirst(ClaimTypes.Name)?.Value;
+
+            if (string.IsNullOrEmpty(email))
+            {
+                return BadRequest(new { message = "Email not found from Google" });
+            }
+
+            // Check if user exists
+            var existingUser = await _userRepo.GetUserByEmail(email);
+            if (existingUser == null)
+            {
+                existingUser = new ApplicationUser
+                {
+                    UserName = email,
+                    Email = email,
+                    Name = name,
+                    NormalizedEmail = email.ToUpper(),
+                    EmailConfirmed = true
+                };
+
+                var passwordHasher = new PasswordHasher<ApplicationUser>();
+                existingUser.PasswordHash = passwordHasher.HashPassword(existingUser, email);
+
+                var resultCreate = await _userRepo.CreateUserAsync(existingUser);
+                if (!resultCreate.Succeeded)
+                    return BadRequest(new { message = "User creation failed" });
+
+                await _userRepo.AddToRoleAsync(existingUser.Id, "customer");
+            }
+            var token = await _jwtService.GenerateToken(existingUser);
+
+            return Ok(new
+            {
+                token,
+                userId = existingUser.Id,
+                isAuthenticated = true,
+                isAdmin = false
+            });
+        }
+
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return Ok(new { Message = "Logged out successfully" });
+        }
     }
+
 }

@@ -37,8 +37,7 @@ namespace Fish_Manage.Controllers
             if (!string.IsNullOrEmpty(searchTerm))
             {
                 productList = productList.Where(p =>
-                    p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    p.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+                    p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
             }
 
             _response.Result = _mapper.Map<List<ProductDTO>>(productList);
@@ -57,8 +56,7 @@ namespace Fish_Manage.Controllers
             if (!string.IsNullOrEmpty(searchTerm))
             {
                 productList = productList.Where(p =>
-                    p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    p.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+                    p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
             }
             _response.Result = _mapper.Map<List<ProductDTO>>(productList);
             _response.StatusCode = HttpStatusCode.OK;
@@ -75,8 +73,7 @@ namespace Fish_Manage.Controllers
             if (!string.IsNullOrEmpty(searchTerm))
             {
                 productList = productList.Where(p =>
-                    p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    p.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+                    p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
             }
             _response.Result = _mapper.Map<List<ProductDTO>>(productList);
             _response.StatusCode = HttpStatusCode.OK;
@@ -92,8 +89,7 @@ namespace Fish_Manage.Controllers
             if (!string.IsNullOrEmpty(searchTerm))
             {
                 productList = productList.Where(p =>
-                    p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    p.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+                    p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
             }
             _response.Result = _mapper.Map<List<ProductDTO>>(productList);
             _response.StatusCode = HttpStatusCode.OK;
@@ -109,8 +105,7 @@ namespace Fish_Manage.Controllers
             if (!string.IsNullOrEmpty(searchTerm))
             {
                 productList = productList.Where(p =>
-                    p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    p.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+                    p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
             }
             _response.Result = _mapper.Map<List<ProductDTO>>(productList);
             _response.StatusCode = HttpStatusCode.OK;
@@ -126,8 +121,7 @@ namespace Fish_Manage.Controllers
             if (!string.IsNullOrEmpty(searchTerm))
             {
                 productList = productList.Where(p =>
-                    p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    p.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+                    p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
             }
             _response.Result = _mapper.Map<List<ProductDTO>>(productList);
             _response.StatusCode = HttpStatusCode.OK;

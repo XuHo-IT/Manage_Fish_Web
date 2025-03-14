@@ -1,58 +1,43 @@
 <template>
-    <div class="payment-status">
-      <div v-if="order">
-        <h1 :class="{'text-green-500': isSuccess, 'text-red-500': !isSuccess}">
-          {{ isSuccess ? 'Payment Successful!' : 'Payment Failed' }}
-        </h1>
-        <div class="order-details">
-          <p><strong>Order ID:</strong> {{ order.orderId }}</p>
-          <p><strong>User ID:</strong> {{ order.userId }}</p>
-          <p><strong>Order Date:</strong> {{ order.orderDate }}</p>
-          <p><strong>Total Amount:</strong> ${{ order.totalAmount }}</p>
-          <p><strong>Payment Method:</strong> {{ order.paymentMethod }}</p>
-        </div>
-      </div>
-      <div v-else>
-        <p>Loading order details...</p>
-      </div>
+  <div class="container-login100-form-btn m-t-17 exit-btn">
+    <a href="https://localhost:5173/">
+      <button type="submit" class="login100-form-btn">Back</button>
+    </a>
+  </div>
+  <div class="payment-status">
+    <h1 :class="{ 'text-green-500': isSuccess }">
+      {{ "Payment Successful!" }}
+    </h1>
+    <div class="order-details">
+      <p><strong>Order ID:</strong> {{ orderId }}</p>
+      <p><strong>User ID:</strong> {{ userId }}</p>
+      <p><strong>Order Date:</strong> {{ new Date().toLocaleString() }}</p>
+      <p><strong>Total Amount:</strong> {{ amount }}vnd</p>
+      <p><strong>Payment Method:</strong> {{ payType }}</p>
     </div>
-  </template>
-  
-  <script>
-  export default {
-    data() {
-      return {
-        order: null,
-        isSuccess: false,
-      };
-    },
-    created() {
-      const query = this.$route.query;
-      this.order = {
-        orderId: query.orderId,
-        userId: query.userId,
-        orderDate: new Date().toLocaleString(),
-        totalAmount: query.amount,
-        paymentMethod: query.payType,
-      };
-      this.isSuccess = query.status === 'success';
-    },
-  };
-  </script>
-  
-  <style scoped>
-  .payment-status {
-    max-width: 600px;
-    margin: 50px auto;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    background: #f9f9f9;
-    text-align: center;
-  }
-  .order-details {
-    margin-top: 20px;
-    text-align: left;
-  }
-  </style>
-  
+  </div>
+</template>
+
+<script setup>
+const params = new URLSearchParams(window.location.search);
+const orderId = params.get("orderId");
+const userId = params.get("requestId") ||params.get("userId") ;
+const amount = params.get("amount");
+const payType = params.get("payType");
+</script>
+
+<style scoped>
+.payment-status {
+  max-width: 600px;
+  margin: 50px auto;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #f9f9f9;
+  text-align: center;
+}
+.order-details {
+  margin-top: 20px;
+  text-align: left;
+}
+</style>

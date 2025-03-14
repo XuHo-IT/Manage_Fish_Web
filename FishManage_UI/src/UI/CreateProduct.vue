@@ -19,7 +19,7 @@
           <div>
             <label for="price" class="formbold-form-label">Price</label>
             <input
-              type="number"
+              type="float"
               name="price"
               id="price"
               class="formbold-form-input"
@@ -29,6 +29,19 @@
           </div>
         </div>
 
+        <div class="formbold-input-flex">
+          <div>
+            <label for="quantity" class="formbold-form-label">Quantity</label>
+            <input
+              type="number"
+              name="quantity"
+              id="quantity"
+              class="formbold-form-input"
+              v-model="newProduct.Quantity"
+              required
+            />
+          </div>
+        </div>
         <div class="formbold-input-flex">
           <div>
             <label for="category" class="formbold-form-label">Category</label>
@@ -177,6 +190,7 @@ const newProduct = ref({
   Category: "",
   Description: "",
   Supplier: "",
+  Quantity: "",
 });
 
 const imageFile = ref(null);
@@ -211,10 +225,12 @@ const createProduct = async () => {
   const formData = new FormData();
   formData.append("ProductName", newProduct.value.ProductName);
   formData.append("Price", newProduct.value.Price);
+  formData.append("Quantity", newProduct.value.Quantity);
   formData.append("Category", newProduct.value.Category);
   formData.append("Description", newProduct.value.Description);
   formData.append("Supplier", newProduct.value.Supplier);
   formData.append("imageFile", imageFile.value);
+
 
   try {
     const response = await api.post("FishProductAPI", formData, {

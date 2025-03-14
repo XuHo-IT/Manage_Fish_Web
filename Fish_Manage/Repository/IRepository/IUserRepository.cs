@@ -12,7 +12,7 @@ namespace Fish_Manage.Repository.IRepository
         Task<ApplicationUser> GetUserByUsername(string userName);
         Task<IdentityResult> CreateUserAsync(ApplicationUser user);
         Task<LoginResponseDTO> Login(LoginRequestDTO loginRequestDTO);
-        Task<ApplicationUser> Register(RegisterationRequestDTO registerationRequestDTO);
+        Task<ApplicationUser> Register(RegisterationRequestDTO registerationRequestDTO, string img);
         Task<bool> ValidatePassword(ApplicationUser user, string password);
         Task<ApplicationUser> UpdateAsync(ApplicationUser user);
     }

@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
 using Fish_Manage.Models;
-using Fish_Manage.Models.DTO.Order;
 using Fish_Manage.Repository.DTO;
 using Fish_Manage.Repository.IRepository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Net;
 
 namespace Fish_Manage.Controllers
@@ -14,28 +14,75 @@ namespace Fish_Manage.Controllers
     public class FishOrderAPIController : ControllerBase
     {
         protected APIResponse _response;
+        private readonly FishManageContext _context;
         private readonly IOrderRepository _dbOrder;
         private readonly IMapper _mapper;
 
-        public FishOrderAPIController(IOrderRepository dbOrder, IMapper mapper)
+        public FishOrderAPIController(APIResponse response, FishManageContext context, IOrderRepository dbOrder, IMapper mapper)
         {
-            _response = new();
+            _response = response;
+            _context = context;
             _dbOrder = dbOrder;
             _mapper = mapper;
         }
+
         [HttpGet]
         [Authorize(Roles = "admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<APIResponse>> GetOrders()
         {
-            IEnumerable<Order> productList;
-            productList = await _dbOrder.GetAllAsync();
-            _response.Result = _mapper.Map<List<OrderDTO>>(productList);
-            _response.StatusCode = HttpStatusCode.OK;
-            return Ok(_response);
+            try
+            {
+                var orders = await _context.Orders
+     .Include(o => o.OrderProducts)
+     .ThenInclude(op => op.Product)
+     .ToListAsync();
+
+
+                var orderDTOs = orders.Select(order => new
+                {
+                    order.OrderId,
+                    order.UserId,
+                    order.Name,
+                    order.PhoneNumber,
+                    order.Address,
+                    order.Email,
+                    order.OrderDate,
+                    order.TotalAmount,
+                    order.PaymentMethod,
+                    Products = order.OrderProducts.Select(op => new
+                    {
+                        op.Product.ProductId,
+                        op.Product.ProductName,
+                        op.Product.Price,
+                        op.Product.Category,
+                        op.Product.Description,
+                        op.Product.Supplier,
+                        op.Product.ImageURl,
+                        Quantity = op.Quantity
+                    }).ToList()
+                }).ToList();
+
+                return Ok(new APIResponse
+                {
+                    IsSuccess = true,
+                    StatusCode = HttpStatusCode.OK,
+                    Result = orderDTOs
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new APIResponse
+                {
+                    IsSuccess = false,
+                    ErrorMessages = new List<string> { ex.Message },
+                    StatusCode = HttpStatusCode.InternalServerError
+                });
+            }
         }
+
         [HttpGet("{id}", Name = "GetOrder")]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -51,15 +98,122 @@ namespace Fish_Manage.Controllers
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     return BadRequest(_response);
                 }
-                var order = await _dbOrder.GetAsync(u => u.OrderId == id);
+                //var order = await _dbOrder.GetAsync(u => u.OrderId == id);
+                var order = await _context.Orders
+    .Include(o => o.OrderProducts)
+    .ThenInclude(op => op.Product)
+    .FirstOrDefaultAsync(u => u.OrderId == id);
+
                 if (order == null)
                 {
-                    _response.StatusCode = HttpStatusCode.NotFound;
-                    return NotFound(_response);
+                    return NotFound(new APIResponse
+                    {
+                        IsSuccess = false,
+                        ErrorMessages = new List<string> { "Order not found" },
+                        StatusCode = HttpStatusCode.NotFound
+                    });
                 }
-                _response.Result = _mapper.Map<OrderDTO>(order);
-                _response.StatusCode = HttpStatusCode.OK;
-                return Ok(_response);
+
+                var orderDTO = new
+                {
+                    order.OrderId,
+                    order.UserId,
+                    order.Name,
+                    order.PhoneNumber,
+                    order.Address,
+                    order.Email,
+                    order.OrderDate,
+                    order.TotalAmount,
+                    order.PaymentMethod,
+                    Products = order.OrderProducts.Select(op => new
+                    {
+                        op.Product.ProductId,
+                        op.Product.ProductName,
+                        op.Product.Price,
+                        op.Product.Category,
+                        op.Product.Description,
+                        op.Product.Supplier,
+                        op.Product.ImageURl,
+                        Quantity = op.Quantity
+                    }).ToList()
+                };
+
+                return Ok(new APIResponse
+                {
+                    IsSuccess = true,
+                    StatusCode = HttpStatusCode.OK,
+                    Result = orderDTO
+                });
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.ErrorMessages
+                     = new List<string>() { ex.ToString() };
+            }
+            return _response;
+        }
+
+        [HttpGet("user/{userId}", Name = "GetOrderByUserId")]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<APIResponse>> GetOrderByUserId(string userId)
+        {
+            try
+            {
+                if (userId == "")
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    return BadRequest(_response);
+                }
+                var order = await _context.Orders
+    .Include(o => o.OrderProducts)
+    .ThenInclude(op => op.Product)
+    .FirstOrDefaultAsync(u => u.UserId == userId);
+
+                if (order == null)
+                {
+                    return NotFound(new APIResponse
+                    {
+                        IsSuccess = false,
+                        ErrorMessages = new List<string> { "Order not found" },
+                        StatusCode = HttpStatusCode.NotFound
+                    });
+                }
+
+                var orderDTO = new
+                {
+                    order.OrderId,
+                    order.UserId,
+                    order.Name,
+                    order.PhoneNumber,
+                    order.Address,
+                    order.Email,
+                    order.OrderDate,
+                    order.TotalAmount,
+                    order.PaymentMethod,
+                    Products = order.OrderProducts.Select(op => new
+                    {
+                        op.Product.ProductId,
+                        op.Product.ProductName,
+                        op.Product.Price,
+                        op.Product.Category,
+                        op.Product.Description,
+                        op.Product.Supplier,
+                        op.Product.ImageURl,
+                        Quantity = op.Quantity
+                    }).ToList()
+                };
+
+                return Ok(new APIResponse
+                {
+                    IsSuccess = true,
+                    StatusCode = HttpStatusCode.OK,
+                    Result = orderDTO
+                });
             }
             catch (Exception ex)
             {
@@ -103,34 +257,34 @@ namespace Fish_Manage.Controllers
             }
             return _response;
         }
-        [Authorize(Roles = "admin")]
-        [HttpPut("{id}", Name = "UpdateOrder")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<APIResponse>> UpdateOrder(string id, [FromBody] OrderUpdateDTO updateDTO)
-        {
-            try
-            {
-                if (updateDTO == null || id != updateDTO.OrderId)
-                {
-                    return BadRequest();
-                }
+        //[Authorize(Roles = "admin")]
+        //[HttpPut("{id}", Name = "UpdateOrder")]
+        //[ProducesResponseType(StatusCodes.Status204NoContent)]
+        //[ProducesResponseType(StatusCodes.Status400BadRequest)]
+        //public async Task<ActionResult<APIResponse>> UpdateOrder(string id, [FromBody] OrderUpdateDTO updateDTO)
+        //{
+        //    try
+        //    {
+        //        if (updateDTO == null || id != updateDTO.OrderId)
+        //        {
+        //            return BadRequest();
+        //        }
 
-                Order model = _mapper.Map<Order>(updateDTO);
+        //        Order model = _mapper.Map<Order>(updateDTO);
 
-                await _dbOrder.UpdateAsync(model);
-                _response.StatusCode = HttpStatusCode.NoContent;
-                _response.IsSuccess = true;
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.ErrorMessages
-                     = new List<string>() { ex.ToString() };
-            }
-            return _response;
-        }
+        //        await _dbOrder.UpdateAsync(model);
+        //        _response.StatusCode = HttpStatusCode.NoContent;
+        //        _response.IsSuccess = true;
+        //        return Ok(_response);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _response.IsSuccess = false;
+        //        _response.ErrorMessages
+        //             = new List<string>() { ex.ToString() };
+        //    }
+        //    return _response;
+        //}
         [HttpPost("GetMoneyPerYear")]
         [Authorize(Roles = "admin")]
         [ProducesResponseType(StatusCodes.Status201Created)]

@@ -14,12 +14,8 @@ namespace Fish_Manage.Models.DTO.Order
         public string TotalAmount { get; set; }
         [Required]
         public string PaymentMethod { get; set; }
-        [Required]
-        public string ProductId { get; set; }
-        [Required]
-        public int Quantity { get; set; }
-        [Required]
-        public decimal? UnitPrice { get; set; }
+
+        public ICollection<OrderProductDTO> Products { get; set; } = new List<OrderProductDTO>();
 
     }
 }

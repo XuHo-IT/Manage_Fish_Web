@@ -16,6 +16,8 @@ import NewList from "./UI/NewList.vue";
 import VueApexCharts from "vue3-apexcharts";
 import ButtonLogin from "./UI/ButtonLogin.vue";
 import Voice from "./UI/Voice.vue";
+import Profile from "./UI/Profile.vue";
+import CallBack from "./UI/CallBack.vue";
 import router from "./router/index.js";
 import store from "./js/store.js"; 
 
@@ -75,3 +77,9 @@ buttonLogin.mount("#buttonLogin");
 
 const voice = createApp(Voice);
 voice.mount("#voice");
+
+const profile = createApp(Profile);
+profile.mount("#profile");
+
+const callBack = createApp(CallBack);
+callBack.mount("#callBack");
