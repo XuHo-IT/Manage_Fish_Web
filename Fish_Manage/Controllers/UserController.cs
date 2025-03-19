@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Fish_Manage.Models;
+using Fish_Manage.Models.DTO;
 using Fish_Manage.Models.DTO.FaceBook;
 using Fish_Manage.Models.DTO.Password;
 using Fish_Manage.Models.DTO.User;
@@ -12,7 +13,9 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Security.Claims;
 
@@ -29,9 +32,10 @@ namespace Fish_Manage.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly EmailSender _emailSender;
+        private readonly IConfiguration _configuration;
         private readonly APIResponse _response = new();
 
-        public UserController(FishManageContext context, IUserRepository userRepo, IMapper mapper, JwtService jwtService, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, EmailSender emailSender, APIResponse response)
+        public UserController(FishManageContext context, IUserRepository userRepo, IMapper mapper, JwtService jwtService, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, EmailSender emailSender, IConfiguration configuration, APIResponse response)
         {
             _context = context;
             _userRepo = userRepo;
@@ -40,6 +44,7 @@ namespace Fish_Manage.Controllers
             _userManager = userManager;
             _roleManager = roleManager;
             _emailSender = emailSender;
+            _configuration = configuration;
             _response = response;
         }
 
@@ -118,14 +123,112 @@ namespace Fish_Manage.Controllers
             });
         }
 
+        [HttpPost("loginWithOkta")]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> LoginWithOkta([FromBody] OktaLoginDTO model)
+        {
+            var handler = new JwtSecurityTokenHandler();
+            SecurityToken validatedToken;
+
+            try
+            {
+                var authority = _configuration["Okta:Authority"];
+                var clientId = _configuration["Okta:ClientId"];
+
+                var validationParameters = new TokenValidationParameters
+                {
+                    ValidIssuer = authority,
+                    ValidAudience = clientId,
+                    ValidateIssuerSigningKey = true,
+                    ValidateLifetime = true,
+                    ValidateAudience = true,
+                    ValidateIssuer = true,
+                    IssuerSigningKeys = await GetSigningKeysFromOkta(authority)
+                };
+
+                var principal = handler.ValidateToken(model.IdToken, validationParameters, out validatedToken);
+
+                if (principal == null)
+                {
+                    return Unauthorized(new APIResponse
+                    {
+                        StatusCode = HttpStatusCode.Unauthorized,
+                        IsSuccess = false,
+                        ErrorMessages = new List<string> { "Invalid Okta token" }
+                    });
+                }
+
+                var userEmail = principal.FindFirst(ClaimTypes.Email)?.Value;
+                var user = await _userRepo.GetUserByEmail(userEmail);
+
+                if (user == null)
+                {
+                    return Unauthorized(new APIResponse
+                    {
+                        StatusCode = HttpStatusCode.Unauthorized,
+                        IsSuccess = false,
+                        ErrorMessages = new List<string> { "User not found" }
+                    });
+                }
+
+                var token = await _jwtService.GenerateToken(user);
+                var loginResponse = new LoginResponseDTO
+                {
+                    Token = token,
+                    User = new UserDTO
+                    {
+                        Id = user.Id,
+                        UserName = user.UserName,
+                        Email = user.Email,
+                        Name = user.Name,
+                        Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? "customer",
+                        PhoneNumber = user.PhoneNumber,
+                        Gender = user.Gender,
+                        DateOfBirth = user.DateOfBirth,
+                        Address = user.Address,
+                    }
+                };
+
+                return Ok(new APIResponse
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    IsSuccess = true,
+                    Result = loginResponse
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new APIResponse
+                {
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    IsSuccess = false,
+                    ErrorMessages = new List<string> { ex.Message }
+                });
+            }
+        }
+        private static async Task<IEnumerable<SecurityKey>> GetSigningKeysFromOkta(string authority)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                var jwksUrl = $"{authority}/v1/keys";
+                var jwksResponse = await httpClient.GetStringAsync(jwksUrl);
+                var jwks = new JsonWebKeySet(jwksResponse);
+                return jwks.Keys;
+            }
+        }
+
+
+
+
         [HttpPost("register")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Register(
-     [FromForm] RegisterationRequestDTO model,
-     IFormFile? imageFile,
-     [FromServices] CloudinaryService cloudinaryService)
+         [FromForm] RegisterationRequestDTO model,
+         IFormFile? imageFile,
+         [FromServices] CloudinaryService cloudinaryService)
         {
             if (!_userRepo.IsUniqueUser(model.UserName))
             {

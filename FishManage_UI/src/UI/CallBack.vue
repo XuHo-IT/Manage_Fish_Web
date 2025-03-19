@@ -24,6 +24,23 @@ const orderId = params.get("orderId");
 const userId = params.get("requestId") ||params.get("userId") ;
 const amount = params.get("amount");
 const payType = params.get("payType");
+
+async function handleRedirect() {
+  try {
+    const tokens = await authClient.token.parseFromUrl();
+    authClient.tokenManager.setTokens(tokens);
+    console.log("User logged in:", tokens);
+    window.location.href = "/";  // Redirect to home
+  } catch (error) {
+    console.error("Error processing login:", error);
+  }
+}
+
+Onmounted = () => {
+  handleRedirect();
+}
+
+
 </script>
 
 <style scoped>

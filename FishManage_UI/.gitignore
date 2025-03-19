@@ -32,3 +32,4 @@ coverage
 model.tar.gz
 
 cert
+okta.env

@@ -14,6 +14,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@okta/okta-vue": "^5.7.0",
     "apexcharts": "^4.5.0",
     "axios": "^1.7.9",
     "dayjs": "^1.11.13",

@@ -110,8 +110,8 @@ builder.Services.AddAuthentication(x =>
     })
     .AddFacebook(o =>
     {
-        o.ClientId = "1722472512021344";
-        o.ClientSecret = "354f1bf3299985af82851885835d3bb2";
+        o.ClientId = builder.Configuration["FaceBook:ClientId"];
+        o.ClientSecret = builder.Configuration["FaceBook:ClientId"];
     })
 .AddCookie()
 //Google
@@ -119,18 +119,18 @@ builder.Services.AddAuthentication(x =>
  {
      options.ClientId = builder.Configuration["GoogleKeys:ClientId"];
      options.ClientSecret = builder.Configuration["GoogleKeys:ClientSecret"];
- });
+ })
 //okta
-//.AddOpenIdConnect(options =>
-//{
-//    options.Authority = "https://your-okta-domain.okta.com";
-//    options.ClientId = "your-client-id";
-//    options.ClientSecret = "your-client-secret";
-//    options.ResponseType = "code";
-//    options.SaveTokens = true;
-//    options.CallbackPath = "/signin-oidc";
-//});
-
+.AddOpenIdConnect(options =>
+{
+    options.Authority = builder.Configuration["Okta:Authority"];
+    options.ClientId = builder.Configuration["Okta:ClientId"];
+    options.ClientSecret = builder.Configuration["Okta:ClientSecret"];
+    options.ResponseType = "code";
+    options.SaveTokens = true;
+    options.CallbackPath = new PathString("/");
+    options.RequireHttpsMetadata = false;
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -164,18 +164,6 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Configure CORS
-//builder.Services.AddCors(options =>
-//{
-//    options.AddPolicy("AllowFrontend",
-//        policy =>
-//        {
-//            policy.WithOrigins("http://localhost:5173", "http://127.0.0.1:5173") // Add frontend URL
-//                  .AllowAnyHeader()
-//                  .AllowAnyMethod()
-//                  .AllowCredentials();
-//        });
-//});
 
 builder.Services.AddCors(options =>
 {
@@ -220,7 +208,6 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseHttpsRedirection();
-//app.UseCors("AllowFrontend");
 
 app.UseCors("AllowAll");
 
