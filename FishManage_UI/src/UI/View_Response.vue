@@ -1,5 +1,5 @@
 <template>
-  <div class="col-md-12 col-xl-8">
+  <div class="col-md-12 col-xl-8" style="width: 100%;">
     <div class="d-flex align-items-center justify-content-between mb-3">
       <h5 class="mb-0">Unique Visitor</h5>
       <ul class="nav nav-pills justify-content-end mb-0" id="chart-tab-tab" role="tablist">

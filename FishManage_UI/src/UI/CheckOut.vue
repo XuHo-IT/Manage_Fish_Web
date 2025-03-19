@@ -66,7 +66,6 @@
         <h6>{{ item.productName }}</h6>
         <p>Quantity: {{ item.quantity }}</p>
         <p>Price: ${{ item.price }}</p>
-        <p>Bill total: ${{ (item.price * item.quantity).toFixed(2) }}</p>
       </div>
       <div class="d-flex justify-content-between">
         <h5>Bill total:</h5>

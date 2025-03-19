@@ -18,6 +18,7 @@ import ButtonLogin from "./UI/ButtonLogin.vue";
 import Voice from "./UI/Voice.vue";
 import Profile from "./UI/Profile.vue";
 import CallBack from "./UI/CallBack.vue";
+import Recognition from "./UI/Recognition.vue";
 import router from "./router/index.js";
 import store from "./js/store.js"; 
 
@@ -83,3 +84,6 @@ profile.mount("#profile");
 
 const callBack = createApp(CallBack);
 callBack.mount("#callBack");
+
+const recognition = createApp(Recognition);
+recognition.mount("#recognition");

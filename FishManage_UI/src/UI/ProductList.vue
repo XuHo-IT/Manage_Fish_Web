@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="d-flex flex-wrap align-items-center  p-2 rounded-4">
+    <div class="d-flex flex-wrap align-items-center p-2 rounded-4">
       <!-- Search Bar -->
       <div class="col-md-4 d-none d-md-block p-2">
         <router-view></router-view>
@@ -125,7 +125,7 @@
                     class="product-item"
                   >
                     <figure>
-                      <a href="index.html" title="Product Title">
+                      <a href="index.html">
                         <img
                           :src="imageSrc(product)"
                           :alt="product.productName"
@@ -159,7 +159,7 @@
                             placeholder="0"
                           />
 
-                          <div class="col-5">
+                          <div class="col-5 btn-buy-user">
                             <button
                               @click="addToCart(product)"
                               class="btn btn-primary rounded-1 p-2 fs-7 btn-cart"
@@ -230,7 +230,7 @@ input.form-control.border-dark-subtle.input-number.quantity {
   width: 50px;
 }
 .row.row-product {
-  width: 108%;
+  width: 100%;
   padding: 0;
   margin: 0;
 }
@@ -248,6 +248,9 @@ svg.svg-edit {
 svg.svg-buy {
   margin-left: 40px;
 }
+/* .btn-buy-user{
+  width: calc(100% / 1.4);
+} */
 </style>
 
 <script setup>
@@ -269,7 +272,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-import { ref, onMounted, computed, onBeforeUnmount } from "vue";
+import { ref, onMounted, computed, onBeforeUnmount, watch } from "vue";
 import api from "@/js/api_auth.js";
 import Modal from "./Modal.vue";
 import CreateProduct from "./CreateProduct.vue";
@@ -277,7 +280,7 @@ import EditProduct from "./EditProduct.vue";
 import CreateCoupon from "./CreateCoupon.vue";
 import Voice from "./Voice.vue";
 import ChatBot from "./ChatBot.vue";
-import { eventBus } from "@/js/eventBus.js";
+import { eventBus, eventBus2 } from "@/js/eventBus.js";
 
 const minPrice = ref(0);
 const maxPrice = ref(100);
@@ -352,6 +355,52 @@ const imageSrc = (product) => {
   }
   return "path/to/default-image.png";
 };
+const numberWords = {
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+};
+
+const processVoiceCommand = () => {
+  const transcript = eventBus.result;
+  const regex =
+    /\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+([\w\s]+?)\s*(?:fish|item|piece|unit|bag|box)?$/i;
+  const match = transcript.match(regex);
+
+  if (match) {
+    let quantity = match[1];
+    const productName = match[2].trim();
+
+    // Convert word numbers to digits if necessary
+    if (isNaN(quantity)) {
+      quantity = numberWords[quantity]; // Convert "one" to 1, etc.
+    } else {
+      quantity = parseInt(quantity);
+    }
+
+    const product = products.value.find((p) =>
+      p.productName.toLowerCase().includes(productName.toLowerCase()),
+    );
+
+    console.log(product);
+    if (product) {
+      quantities.value[product.productId] = quantity;
+      addToCart(product);
+    } else {
+      alert(`Product "${productName}" not found.`);
+    }
+  } else {
+    alert("Could not recognize the product and quantity.");
+  }
+};
+
 const handleSearch = () => {
   fetchSortedProducts();
 };
@@ -379,7 +428,7 @@ const fetchSortedProducts = async () => {
 
     if (response.data.isSuccess) {
       products.value = response.data.result;
-      console.log("data:" , response.data.result);
+      console.log("data:", products.value);
     } else {
       console.error("Error fetching data:", response.data.errorMessages);
     }
@@ -389,8 +438,6 @@ const fetchSortedProducts = async () => {
 };
 
 const deleteProduct = async (productId) => {
-
-
   try {
     await api.delete(`/FishProductAPI/${productId}`);
     window.location.reload();
@@ -466,7 +513,17 @@ const hideModal = () => {
 onBeforeUnmount(() => {
   window.removeEventListener("beforeunload", endSession);
 });
-
+watch(
+  () => eventBus2.result,
+  (newValue) => {
+    if (newValue === "Victory") {
+      handleSearch();
+    }
+    if (newValue === "ILoveYou") {
+      processVoiceCommand();
+    }
+  },
+);
 onMounted(() => {
   trackView();
   loadAuthState();

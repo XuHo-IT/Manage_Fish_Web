@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="isLogin" @submit.prevent="handleLogin">
+    <div v-if="isLogin">
       <div
         class="limiter container-login100"
         style="background-image: url(&quot;images/fish_back.gif&quot;)"
@@ -57,7 +57,13 @@
             </div>
 
             <div class="container-login100-form-btn m-t-17">
-              <button type="submit" class="login100-form-btn">Sign In</button>
+              <button type="button" class="login100-form-btn" @click="handleLogin">Sign In</button>
+            </div>
+
+            <div class="container-login100-form-btn m-t-17">
+              <button type="button" class="login100-form-btn" @click="loginWithOkta">
+                Sign In with Okta
+              </button>
             </div>
 
             <div class="w-full text-center p-t-55">
@@ -234,6 +240,7 @@
 <script setup>
 import api from "@/js/api_auth.js";
 import { ref, onMounted, watch } from "vue";
+import { OktaAuth } from "@okta/okta-auth-js";
 
 const showModal = ref(false);
 const isLogin = ref(true);
@@ -242,7 +249,6 @@ const isAdmin = ref(false);
 const userId = ref(null);
 
 const loginData = ref({ userName: "", password: "" });
-
 
 const registerData = ref({
   email: "",
@@ -356,6 +362,42 @@ const handleLogin = async () => {
       error.response?.data?.errorMessages?.[0] || "An error occurred during login";
   }
 };
+const authClient = new OktaAuth({
+  issuer: "https://dev-51113269.okta.com/oauth2/default",
+  clientId: "0oanvdc0woq3H9VVh5d7",
+  redirectUri: "https://localhost:5173/",
+  responseType: ["id_token", "token"],
+  scopes: ["openid", "email", "profile"],
+  pkce: true,
+});
+
+async function loginWithOkta() {
+  try {
+    await authClient.token.getWithRedirect({
+      responseType: ["id_token", "token"],
+    });
+    // handleCallback();
+  } catch (error) {
+    console.error("Login failed", error);
+  }
+}
+
+async function handleCallback() {
+  const tokens = await authClient.token.parseFromUrl();
+  const idToken = tokens.idToken.value;
+  sendTokenToBackend(idToken);
+}
+
+async function sendTokenToBackend(idToken) {
+  const response = await fetch("https://localhost:7229/api/User/loginWithOkta", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idToken }),
+  });
+
+  const data = await response.json();
+  console.log("Backend Response:", data);
+}
 
 const handleRegister = async () => {
   try {
@@ -369,17 +411,17 @@ const handleRegister = async () => {
       Gender: registerData.value.gender,
       Address: registerData.value.address,
       DateOfBirth: new Date(registerData.value.DateOfBirth).toISOString(),
-      imageFile:"",
+      imageFile: "",
     };
-  console.log(payload);
-    const response = await api.post("User/register", payload,{
+    console.log(payload);
+    const response = await api.post("User/register", payload, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     });
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", role);
-      localStorage.setItem("userId", user.id);
+    localStorage.setItem("token", token);
+    localStorage.setItem("role", role);
+    localStorage.setItem("userId", user.id);
     window.location.href = "https://localhost:5173/";
     clearForm();
   } catch (error) {
