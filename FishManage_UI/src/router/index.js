@@ -1,13 +1,13 @@
 import { createRouter, createWebHistory } from "vue-router";
-import ProductList from "@/UI/ProductList.vue";
-import AuthModal from "@/UI/AuthModal.vue";
-import CreateProduct from "@/UI/CreateProduct.vue";
-import EditProduct from "@/UI/EditProduct.vue";
-import CheckOut from "@/UI/CheckOut.vue";
-import CallBack from "@/UI/CallBack.vue";
-import CreateCoupon from "@/UI/CreateCoupon.vue";
-import ChatBot from "@/UI/ChatBot.vue";
-import Voice from "@/UI/Voice.vue";
+import ProductList from "@/components/ProductList.vue";
+import AuthModal from "@/components/AuthModal.vue";
+import CreateProduct from "@/components/CreateProduct.vue";
+import EditProduct from "@/components/EditProduct.vue";
+import CheckOut from "@/components/CheckOut.vue";
+import CallBack from "@/components/CallBack.vue";
+import CreateCoupon from "@/components/CreateCoupon.vue";
+import ChatBot from "@/components/ChatBot.vue";
+import Voice from "@/components/Voice.vue";
 
 const routes = [
   { path: "/productList", component: ProductList },

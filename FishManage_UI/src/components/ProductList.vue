@@ -3,7 +3,6 @@
     <div class="d-flex flex-wrap align-items-center p-2 rounded-4">
       <!-- Search Bar -->
       <div class="col-md-4 d-none d-md-block p-2">
-        <router-view></router-view>
         <Voice />
         <div class="col-md-12" style="box-shadow: red">
           <form @submit.prevent="handleSearch" id="search-form" class="text-center">
@@ -98,7 +97,6 @@
       Create Coupon
     </button>
 
-    <router-view></router-view>
     <Modal :visible="isModalVisible" @close="hideModal">
       <template v-if="isEditMode">
         <EditProduct :product="currentProduct" />
@@ -213,7 +211,6 @@
       </div>
     </div>
   </div>
-  <router-view></router-view>
   <ChatBot />
 </template>
 
@@ -248,9 +245,9 @@ svg.svg-edit {
 svg.svg-buy {
   margin-left: 40px;
 }
-/* .btn-buy-user{
+.btn-buy-user {
   width: calc(100% / 1.4);
-} */
+}
 </style>
 
 <script setup>
@@ -281,7 +278,9 @@ import CreateCoupon from "./CreateCoupon.vue";
 import Voice from "./Voice.vue";
 import ChatBot from "./ChatBot.vue";
 import { eventBus, eventBus2 } from "@/js/eventBus.js";
+import { useAlertStore } from "@/js/useAlertStore";
 
+const alertStore = useAlertStore;
 const minPrice = ref(0);
 const maxPrice = ref(100);
 const sortOrder = ref("default");
@@ -317,7 +316,7 @@ onMounted(() => {
 const addToCart = (product) => {
   const quantity = quantities.value[product.productId] || 0;
   if (quantity < 0) {
-    alert("Please select a valid product quantity!");
+    alertStore.showAlert("Please select a valid product quantity!");
     return;
   }
 
@@ -330,8 +329,9 @@ const addToCart = (product) => {
       ...product,
       quantity: quantity,
     });
+    alertStore.showAlert("Registration successful!", "success");
 
-    alert("Product has been added to your cart!");
+    // alertStore.showAlert("Product has been added to your cart!");
   }
 
   quantities.value[product.productId] = 0;

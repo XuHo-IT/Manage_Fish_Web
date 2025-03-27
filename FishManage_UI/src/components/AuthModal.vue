@@ -19,7 +19,7 @@
               Facebook
             </a>
 
-            <a href="#" class="btn-google m-b-20" @click="socialLogin('google')">
+            <a href="#" class="btn-google m-b-20" @click="socialLoginGoogle('google')">
               <img src="/Login/images/icons/icon-google.png" alt="GOOGLE" />
               Google
             </a>
@@ -241,7 +241,8 @@
 import api from "@/js/api_auth.js";
 import { ref, onMounted, watch } from "vue";
 import { OktaAuth } from "@okta/okta-auth-js";
-
+import { useAlertStore } from "@/js/useAlertStore";
+const alertStore = useAlertStore;
 const showModal = ref(false);
 const isLogin = ref(true);
 const isAuthenticated = ref(!!localStorage.getItem("token"));
@@ -364,39 +365,65 @@ const handleLogin = async () => {
 };
 const authClient = new OktaAuth({
   issuer: "https://dev-51113269.okta.com/oauth2/default",
-  clientId: "0oanvdc0woq3H9VVh5d7",
-  redirectUri: "https://localhost:5173/",
+  clientId: "0oanvas387G3ON4jB5d7",
+  redirectUri: "https://localhost:5173", // Ensure this matches Okta settings
   responseType: ["id_token", "token"],
   scopes: ["openid", "email", "profile"],
-  pkce: true,
+  pkce: true, // Enable PKCE
 });
 
+const socialLoginGoogle = async (provider) => {
+  if (provider === "google") {
+    window.location.href = "https://localhost:7229/api/User/loginGoogle";
+  }
+};
+
+// Login function (redirect to Okta)
+// Login function (handles redirect and token parsing)
 async function loginWithOkta() {
   try {
+    // Step 1: Redirect to Okta login
     await authClient.token.getWithRedirect({
       responseType: ["id_token", "token"],
     });
-    // handleCallback();
+
+    // Step 2: Process the token after redirection
+    const tokens = await authClient.token.parseFromUrl();
+    const idToken = tokens.idToken.value;
+
+    console.log("ID Token:", idToken);
+
+    // Step 3: Send token to backend
+    await sendTokenToBackend(idToken);
+
+    // Step 4: Redirect to the dashboard or home page
+    router.push("/dashboard"); // Change to the correct route
   } catch (error) {
-    console.error("Login failed", error);
+    console.error("Login failed:", error);
   }
 }
 
-async function handleCallback() {
-  const tokens = await authClient.token.parseFromUrl();
-  const idToken = tokens.idToken.value;
-  sendTokenToBackend(idToken);
-}
-
+// Send ID token to backend
 async function sendTokenToBackend(idToken) {
-  const response = await fetch("https://localhost:7229/api/User/loginWithOkta", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ idToken }),
-  });
+  try {
+    const response = await fetch("https://localhost:7229/api/User/loginWithOkta", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken }),
+    });
 
-  const data = await response.json();
-  console.log("Backend Response:", data);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Backend Response:", data);
+
+    // Store access token in localStorage
+    localStorage.setItem("access_token", data.token);
+  } catch (error) {
+    console.error("Failed to send token to backend:", error);
+  }
 }
 
 const handleRegister = async () => {
@@ -426,7 +453,7 @@ const handleRegister = async () => {
     clearForm();
   } catch (error) {
     errorMessage.value = error.response?.data?.errorMessages?.[0] || "An error occurred";
-    alert(errorMessage.value);
+    alertStore.showAlert("Registration fail with" + errorMessage.value);
   }
 };
 
