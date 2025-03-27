@@ -151,10 +151,6 @@
             "Vosk": {
               "target": "Package",
               "version": "[0.3.38, )"
-            },
-            "linq2db": {
-              "target": "Package",
-              "version": "[5.4.1, )"
             }
           },
           "imports": [

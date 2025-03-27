@@ -124,19 +124,6 @@
           }
         }
       },
-      "linq2db/5.4.1": {
-        "type": "package",
-        "compile": {
-          "lib/net6.0/linq2db.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/net6.0/linq2db.dll": {
-            "related": ".xml"
-          }
-        }
-      },
       "Microsoft.AspNetCore.Authentication/2.3.0": {
         "type": "package",
         "dependencies": {
@@ -3470,34 +3457,6 @@
         "lib/netstandard2.0/Humanizer.dll",
         "lib/netstandard2.0/Humanizer.xml",
         "logo.png"
-      ]
-    },
-    "linq2db/5.4.1": {
-      "sha512": "qyH32MbFK6T55KsEcQYTbPFfkOa1Mo65lY/Zo8SFVMy0pwkQBCTnA/RUxyG5+l3D/mgfPz85PH3upDrtklSMrw==",
-      "type": "package",
-      "path": "linq2db/5.4.1",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "MIT-LICENSE.txt",
-        "README.md",
-        "images/icon.png",
-        "lib/net45/linq2db.dll",
-        "lib/net45/linq2db.xml",
-        "lib/net46/linq2db.dll",
-        "lib/net46/linq2db.xml",
-        "lib/net472/linq2db.dll",
-        "lib/net472/linq2db.xml",
-        "lib/net6.0/linq2db.dll",
-        "lib/net6.0/linq2db.xml",
-        "lib/netcoreapp3.1/linq2db.dll",
-        "lib/netcoreapp3.1/linq2db.xml",
-        "lib/netstandard2.0/linq2db.dll",
-        "lib/netstandard2.0/linq2db.xml",
-        "lib/netstandard2.1/linq2db.dll",
-        "lib/netstandard2.1/linq2db.xml",
-        "linq2db.5.4.1.nupkg.sha512",
-        "linq2db.nuspec"
       ]
     },
     "Microsoft.AspNetCore.Authentication/2.3.0": {
@@ -9342,8 +9301,7 @@
       "RestSharp >= 112.1.0",
       "Swashbuckle.AspNetCore >= 6.4.0",
       "System.IdentityModel.Tokens.Jwt >= 8.0.0",
-      "Vosk >= 0.3.38",
-      "linq2db >= 5.4.1"
+      "Vosk >= 0.3.38"
     ]
   },
   "packageFolders": {
@@ -9497,10 +9455,6 @@
           "Vosk": {
             "target": "Package",
             "version": "[0.3.38, )"
-          },
-          "linq2db": {
-            "target": "Package",
-            "version": "[5.4.1, )"
           }
         },
         "imports": [
