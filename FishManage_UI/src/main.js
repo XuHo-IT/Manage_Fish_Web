@@ -1,89 +1,68 @@
 import { createApp } from "vue";
 import App from "./App.vue";
-import ProductList from "./UI/ProductList.vue";
-import AuthModal from "./UI/AuthModal.vue";
-import ResetPass from "./UI/ResetPassword.vue";
-import ForgetPass from "./UI/ForgetPass.vue";
-import CreateProduct from "./UI/CreateProduct.vue";
-import EditProduct from "./UI/EditProduct.vue";
-import Checkout from "./UI/CheckOut.vue";
-import TotalReport from "./UI/TotalReport.vue";
-import RecentOrder from "./UI/RecentOrder.vue";
-import CreateCoupon from "./UI/CreateCoupon.vue";
-import ViewResponse from "./UI/View_Response.vue";
-import MailFirstCoupon from "./UI/MailFirstCoupon.vue";
-import NewList from "./UI/NewList.vue";
-import VueApexCharts from "vue3-apexcharts";
-import ButtonLogin from "./UI/ButtonLogin.vue";
-import Voice from "./UI/Voice.vue";
-import Profile from "./UI/Profile.vue";
-import CallBack from "./UI/CallBack.vue";
-import Recognition from "./UI/Recognition.vue";
 import router from "./router/index.js";
-import store from "./js/store.js"; 
+import store from "./js/store.js";
+import VueApexCharts from "vue3-apexcharts";
 
+// Import all components
+import ProductList from "./components/ProductList.vue";
+import AuthModal from "./components/AuthModal.vue";
+import ResetPass from "./components/ResetPassword.vue";
+import ForgetPass from "./components/ForgetPass.vue";
+import CreateProduct from "./components/CreateProduct.vue";
+import EditProduct from "./components/EditProduct.vue";
+import Checkout from "./components/CheckOut.vue";
+import TotalReport from "./components/TotalReport.vue";
+import RecentOrder from "./components/RecentOrder.vue";
+import CreateCoupon from "./components/CreateCoupon.vue";
+import ViewResponse from "./components/View_Response.vue";
+import MailFirstCoupon from "./components/MailFirstCoupon.vue";
+import NewList from "./components/NewList.vue";
+import ButtonLogin from "./components/ButtonLogin.vue";
+import Voice from "./components/Voice.vue";
+import Profile from "./components/Profile.vue";
+import CallBack from "./components/CallBack.vue";
+import Recognition from "./components/Recognition.vue";
 
-
-
-// Mount main Vue app
+// Create the main Vue app
 const app = createApp(App);
 app.use(router);
 app.use(store);
+app.use(VueApexCharts);
+
+// Register components globally
+const components = {
+  ProductList,
+  AuthModal,
+  ResetPass,
+  ForgetPass,
+  CreateProduct,
+  EditProduct,
+  Checkout,
+  TotalReport,
+  RecentOrder,
+  CreateCoupon,
+  ViewResponse,
+  MailFirstCoupon,
+  NewList,
+  ButtonLogin,
+  Voice,
+  Profile,
+  CallBack,
+  Recognition
+};
+
+Object.entries(components).forEach(([name, component]) => {
+  app.component(name, component);
+});
+
+// Mount the main app to `#app`
 app.mount("#app");
 
-const productListApp = createApp(ProductList);
-productListApp.mount("#product-list");
-
-const authModalApp = createApp(AuthModal);
-authModalApp.mount("#auth-modal");
-
-const resetPass = createApp(ResetPass);
-resetPass.mount("#resetPassword");
-
-const forgetPass = createApp(ForgetPass);
-forgetPass.mount("#forgetPassword");
-
-const createProductApp = createApp(CreateProduct);
-createProductApp.mount("#create-product");
-
-const editProductApp = createApp(EditProduct);
-createProductApp.mount("#edit-product");
-
-const appCheckOut = createApp(Checkout);
-appCheckOut.use(router);
-appCheckOut.mount("#checkout-app");
-
-const appTotalReport = createApp(TotalReport);
-appTotalReport.mount("#total-report");
-
-const recentOrder = createApp(RecentOrder);
-recentOrder.mount("#recent-order");
-
-const viewResponse = createApp(ViewResponse);
-viewResponse.use(VueApexCharts);
-viewResponse.mount("#view-response");
-
-const createCoupon = createApp(CreateCoupon);
-createCoupon.mount("#create-coupon");
-
-const newList = createApp(NewList);
-newList.mount("#new-list");
-
-const mailFirstCoupon = createApp(MailFirstCoupon);
-mailFirstCoupon.mount("#mailCoupon");
-
-
-const buttonLogin = createApp(ButtonLogin);
-buttonLogin.mount("#buttonLogin");
-
-const voice = createApp(Voice);
-voice.mount("#voice");
-
-const profile = createApp(Profile);
-profile.mount("#profile");
-
-const callBack = createApp(CallBack);
-callBack.mount("#callBack");
-
-const recognition = createApp(Recognition);
-recognition.mount("#recognition");
+// Mount additional components dynamically
+document.querySelectorAll("[data-component]").forEach((el) => {
+  const componentName = el.getAttribute("data-component");
+  if (components[componentName]) {
+    createApp(components[componentName]).mount(el);
+  }
+});

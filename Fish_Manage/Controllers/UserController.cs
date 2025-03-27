@@ -9,7 +9,6 @@ using Fish_Manage.Repository.DTO;
 using Fish_Manage.Repository.IRepository;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +20,7 @@ using System.Security.Claims;
 
 namespace Fish_Manage.Controllers
 {
-    [Route("api/User")]
+
     [ApiController]
     public class UserController : Controller
     {
@@ -34,8 +33,9 @@ namespace Fish_Manage.Controllers
         private readonly EmailSender _emailSender;
         private readonly IConfiguration _configuration;
         private readonly APIResponse _response = new();
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public UserController(FishManageContext context, IUserRepository userRepo, IMapper mapper, JwtService jwtService, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, EmailSender emailSender, IConfiguration configuration, APIResponse response)
+        public UserController(FishManageContext context, IUserRepository userRepo, IMapper mapper, JwtService jwtService, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, EmailSender emailSender, IConfiguration configuration, APIResponse response, IHttpClientFactory httpClientFactory)
         {
             _context = context;
             _userRepo = userRepo;
@@ -46,9 +46,9 @@ namespace Fish_Manage.Controllers
             _emailSender = emailSender;
             _configuration = configuration;
             _response = response;
+            _httpClientFactory = httpClientFactory;
         }
-
-        [HttpGet]
+        [HttpGet("api/User")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<APIResponse>> GetUsers()
         {
@@ -79,8 +79,7 @@ namespace Fish_Manage.Controllers
             return Ok(_response);
         }
 
-
-        [HttpPost("login")]
+        [HttpPost("api/User/login")]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Login([FromBody] LoginRequestDTO model)
@@ -122,8 +121,7 @@ namespace Fish_Manage.Controllers
                 Result = loginResponse
             });
         }
-
-        [HttpPost("loginWithOkta")]
+        [HttpPost("api/User/loginWithOkta")]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> LoginWithOkta([FromBody] OktaLoginDTO model)
@@ -135,6 +133,35 @@ namespace Fish_Manage.Controllers
             {
                 var authority = _configuration["Okta:Authority"];
                 var clientId = _configuration["Okta:ClientId"];
+                var clientSecret = _configuration["Okta:ClientSecret"];
+                var tokenEndpoint = $"{authority}/v1/token";
+
+                // Exchange Authorization Code for Access and ID Token
+                using (var client = _httpClientFactory.CreateClient())
+                {
+                    var tokenRequest = new Dictionary<string, string>
+            {
+                { "grant_type", "authorization_code" },
+                { "client_id", clientId },
+                { "client_secret", clientSecret },
+                { "code", model.AuthorizationCode },
+                { "redirect_uri", model.RedirectUri }
+            };
+
+                    var response = await client.PostAsync(tokenEndpoint, new FormUrlEncodedContent(tokenRequest));
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        return Unauthorized(new APIResponse
+                        {
+                            StatusCode = HttpStatusCode.Unauthorized,
+                            IsSuccess = false,
+                            ErrorMessages = new List<string> { "Failed to exchange authorization code for tokens." }
+                        });
+                    }
+
+                    var tokenResult = await response.Content.ReadFromJsonAsync<OktaTokenResponse>();
+                    model.Code = tokenResult.IdToken;
+                }
 
                 var validationParameters = new TokenValidationParameters
                 {
@@ -147,8 +174,7 @@ namespace Fish_Manage.Controllers
                     IssuerSigningKeys = await GetSigningKeysFromOkta(authority)
                 };
 
-                var principal = handler.ValidateToken(model.IdToken, validationParameters, out validatedToken);
-
+                var principal = handler.ValidateToken(model.Code, validationParameters, out validatedToken);
                 if (principal == null)
                 {
                     return Unauthorized(new APIResponse
@@ -160,18 +186,51 @@ namespace Fish_Manage.Controllers
                 }
 
                 var userEmail = principal.FindFirst(ClaimTypes.Email)?.Value;
-                var user = await _userRepo.GetUserByEmail(userEmail);
+                var userName = principal.FindFirst(ClaimTypes.Name)?.Value;
+                var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
+                // Check if user exists in the database
+                var user = await _userRepo.GetUserByEmail(userEmail);
                 if (user == null)
                 {
-                    return Unauthorized(new APIResponse
+                    // Register new user in the backend
+                    user = new ApplicationUser
                     {
-                        StatusCode = HttpStatusCode.Unauthorized,
-                        IsSuccess = false,
-                        ErrorMessages = new List<string> { "User not found" }
-                    });
+                        UserName = userName,
+                        Email = userEmail,
+                        Name = userName,
+                        PhoneNumber = "",
+                        Gender = false,
+                        DateOfBirth = new DateTime(2000, 1, 1),
+                        Address = "Unknown",
+                        ImageUrl = ""
+                    };
+
+                    var result = await _userManager.CreateAsync(user);
+
+                    if (result.Succeeded)
+                    {
+                        await _userManager.AddToRoleAsync(user, "customer");
+                    }
+                    else
+                    {
+                        return BadRequest(new { errors = result.Errors.Select(e => e.Description) });
+                    }
+                    if (!result.Succeeded)
+                    {
+                        return BadRequest(new APIResponse
+                        {
+                            StatusCode = HttpStatusCode.BadRequest,
+                            IsSuccess = false,
+                            ErrorMessages = result.Errors.Select(e => e.Description).ToList()
+                        });
+                    }
+
+                    // Assign default role
+                    await _userManager.AddToRoleAsync(user, "customer");
                 }
 
+                // Generate JWT token for the user
                 var token = await _jwtService.GenerateToken(user);
                 var loginResponse = new LoginResponseDTO
                 {
@@ -207,6 +266,7 @@ namespace Fish_Manage.Controllers
                 });
             }
         }
+
         private static async Task<IEnumerable<SecurityKey>> GetSigningKeysFromOkta(string authority)
         {
             using (var httpClient = new HttpClient())
@@ -218,10 +278,7 @@ namespace Fish_Manage.Controllers
             }
         }
 
-
-
-
-        [HttpPost("register")]
+        [HttpPost("api/User/register")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -290,7 +347,8 @@ namespace Fish_Manage.Controllers
                 }
             });
         }
-        [HttpPut("UserRole/{id}")]
+
+        [HttpPut("api/User/UserRole/{id}")]
         public async Task<IActionResult> UpdateUserRole(string id, [FromBody] UpdateUserRoleDto model)
         {
             var user = await _userManager.FindByIdAsync(id);
@@ -318,7 +376,7 @@ namespace Fish_Manage.Controllers
         {
             public string Role { get; set; }
         }
-        [HttpPost("ChangePassword")]
+        [HttpPost("api/User/ChangePassword")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto model)
         {
             var user = await _userManager.FindByIdAsync(model.UserId);
@@ -336,8 +394,7 @@ namespace Fish_Manage.Controllers
             return Ok(new { message = "Password changed successfully" });
         }
 
-
-        [HttpPost("login-facebook")]
+        [HttpPost("api/User/login-facebook")]
         public async Task<IActionResult> FacebookLogin([FromBody] FacebookLoginRequestDTO request)
         {
             if (string.IsNullOrEmpty(request.AccessToken))
@@ -376,9 +433,8 @@ namespace Fish_Manage.Controllers
             var token = await _jwtService.GenerateToken(existingUser);
             return Ok(new { token, userId = existingUser.Id, isAuthenticated = true, isAdmin = false });
         }
-
         [Authorize(Roles = "admin")]
-        [HttpDelete("{id}")]
+        [HttpDelete("api/User/{id}")]
         public async Task<IActionResult> DeleteUser(string id)
         {
             if (string.IsNullOrEmpty(id)) return BadRequest();
@@ -389,7 +445,7 @@ namespace Fish_Manage.Controllers
             await _userRepo.RemoveAsync(user);
             return NoContent();
         }
-        [HttpPut("{id}")]
+        [HttpPut("api/User/{id}")]
         public async Task<ActionResult<APIResponse>> UpdateUser(
     string id,
     [FromForm] UserUpdateDTO updateDTO,
@@ -465,8 +521,7 @@ namespace Fish_Manage.Controllers
             });
         }
 
-
-        [HttpPost("forgotPass")]
+        [HttpPost("api/User/forgotPass")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDTO request)
         {
             var user = await _userManager.FindByEmailAsync(request.Email);
@@ -497,8 +552,7 @@ namespace Fish_Manage.Controllers
             });
         }
 
-
-        [HttpGet("{id}", Name = "GetUser")]
+        [HttpGet("api/User/{id}", Name = "GetUser")]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -536,9 +590,7 @@ namespace Fish_Manage.Controllers
             }
             return _response;
         }
-
-
-        [HttpPost("resetPass")]
+        [HttpPost("api/User/resetPass")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
@@ -572,26 +624,26 @@ namespace Fish_Manage.Controllers
         }
 
 
-        [HttpGet("loginGoogle")]
-        public IActionResult LoginWithGoogle()
+        [HttpGet("api/User/loginGoogle")]
+        public ActionResult LoginWithGoogle()
         {
-            var redirectUrl = Url.Action(nameof(GoogleResponse), "GoogleAuth");
-            var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
-            return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+            var properties = new AuthenticationProperties()
+            {
+                RedirectUri = Url.Action("GoogleResponse", "User", null, Request.Scheme, Request.Host.Value),
+                AllowRefresh = true,
+            };
+            return Challenge(properties, "Google");
         }
 
-        [HttpGet("google-response")]
+
+        [HttpGet("signin-google")]
         public async Task<IActionResult> GoogleResponse()
         {
-            var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            if (result?.Principal == null)
-            {
-                return Unauthorized(new { message = "Google authentication failed" });
-            }
-
-            // Extract user information from Google login
-            var email = result.Principal.FindFirst(ClaimTypes.Email)?.Value;
-            var name = result.Principal.FindFirst(ClaimTypes.Name)?.Value;
+            var queryString = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            Console.WriteLine($"Google Response Query: {queryString}"); // Debugging log
+                                                                        // Extract user information from Google login
+            var email = queryString.Principal.FindFirst(ClaimTypes.Email)?.Value;
+            var name = queryString.Principal.FindFirst(ClaimTypes.Name)?.Value;
 
             if (string.IsNullOrEmpty(email))
             {
@@ -622,16 +674,11 @@ namespace Fish_Manage.Controllers
             }
             var token = await _jwtService.GenerateToken(existingUser);
 
-            return Ok(new
-            {
-                token,
-                userId = existingUser.Id,
-                isAuthenticated = true,
-                isAdmin = false
-            });
+            var frontendUrl = $"https://localhost:5173/?token={token}";
+            return Redirect(frontendUrl);
         }
 
-        [HttpPost("logout")]
+        [HttpPost("api/User/logout")]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);

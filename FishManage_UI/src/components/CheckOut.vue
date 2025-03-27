@@ -111,10 +111,8 @@
       >
         Pay By COD
       </button>
-
-      <button type="submit" class="btn btn-primary btn-block btn-lg">Pay By VNPay</button>
       <h6>
-        <a href="https://localhost:5173/">Cancel and return to website</a>
+        <a class="btn btn-primary btn-block btn-lg" href="https://localhost:5173/">Cancel and return to website</a>
       </h6>
       <router-view></router-view>
     </div>
@@ -139,6 +137,8 @@
 import { ref, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/js/api_auth.js";
+import { useAlertStore } from "@/js/useAlertStore";
+const alertStore = useAlertStore;
 const isAuthenticated = ref(false);
 const isAdmin = ref(false);
 const userId = ref(null);
@@ -252,7 +252,7 @@ const checkCoupon = async () => {
     coupons.value.find((c) => c.couponCode === selectedCouponCode.value) || null;
 
   if (!selectedCoupon.value || !selectedCoupon.value.couponId) {
-    alert("Please enter a valid coupon code.");
+    alertStore.showAlert("Please enter a valid coupon code.");
     return;
   }
 
@@ -273,11 +273,12 @@ const checkCoupon = async () => {
     if (response.status === 200) {
       newTotal.value = data.newTotal.toFixed(2).toString();
     } else {
-      alert("Failed to apply the coupon.");
+    alertStore.showAlert("Failed to apply the coupon.Please try again");
+
     }
   } catch (error) {
     console.error("Error during coupon validation:", error);
-    alert("An error occurred while applying the coupon.");
+    alertStore.showAlert("An error occurred while applying the coupon.Please try again");
   }
 };
 const fetchUserById = async () => {

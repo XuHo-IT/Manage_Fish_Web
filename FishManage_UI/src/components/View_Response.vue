@@ -169,7 +169,7 @@ const updateUserRole = async (user) => {
 
 const fetchVisitorData = async () => {
   try {
-    const response = await api.get("GetAnalytics");
+    const response = await api.get("Analytics/GetAnalytics");
     if (response.data) {
       totalViews.value = response.data.totalViews;
       totalSessions.value = response.data.activeSessions;

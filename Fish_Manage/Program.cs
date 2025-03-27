@@ -8,6 +8,7 @@ using Fish_Manage.Service.IService;
 using Fish_Manage.Service.Momo;
 using Fish_Manage.Service.Payment;
 using Fish_Manage.Service.Vosk;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -64,7 +65,8 @@ builder.Services.AddScoped<ICouponModelRepository, CouponModelRepository>();
 builder.Services.AddScoped<EmailSender>();
 builder.Services.AddScoped<APIResponse>();
 
-
+//httpClient
+builder.Services.AddHttpClient();
 //Mail
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 //Vosk
@@ -89,48 +91,50 @@ builder.Services.AddControllers(options =>
 .AddNewtonsoftJson()
 .AddXmlDataContractSerializerFormatters();
 
-var key = builder.Configuration.GetValue<string>("ApiSettings:Secret");
+var key = builder.Configuration["ApiSettings:Secret"];
 
-builder.Services.AddAuthentication(x =>
+builder.Services.AddAuthentication(options =>
 {
-    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    // Default scheme must be Cookies for Google OAuth to work
+    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
 })
-    .AddJwtBearer(x =>
-    {
-        x.RequireHttpsMetadata = false;
-        x.SaveToken = true;
-        x.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
-            ValidateIssuer = false,
-            ValidateAudience = false
-        };
-    })
-    .AddFacebook(o =>
-    {
-        o.ClientId = builder.Configuration["FaceBook:ClientId"];
-        o.ClientSecret = builder.Configuration["FaceBook:ClientId"];
-    })
-.AddCookie()
-//Google
-.AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
- {
-     options.ClientId = builder.Configuration["GoogleKeys:ClientId"];
-     options.ClientSecret = builder.Configuration["GoogleKeys:ClientSecret"];
- })
-//okta
-.AddOpenIdConnect(options =>
+.AddCookie() //  Required for Google OAuth state tracking
+.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
 {
-    options.Authority = builder.Configuration["Okta:Authority"];
-    options.ClientId = builder.Configuration["Okta:ClientId"];
-    options.ClientSecret = builder.Configuration["Okta:ClientSecret"];
-    options.ResponseType = "code";
-    options.SaveTokens = true;
-    options.CallbackPath = new PathString("/");
     options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
+        ValidateIssuer = false,
+        ValidateAudience = false
+    };
+})
+.AddFacebook(o =>
+{
+    o.ClientId = builder.Configuration["FaceBook:ClientId"];
+    o.ClientSecret = builder.Configuration["FaceBook:ClientSecret"];
+})
+.AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+{
+    options.ClientId = builder.Configuration["GoogleKeys:ClientId"];
+    options.ClientSecret = builder.Configuration["GoogleKeys:ClientSecret"];
+    options.SignInScheme = IdentityConstants.ExternalScheme;
 });
+
+//okta
+//.AddOpenIdConnect(options =>
+//{
+//    options.Authority = builder.Configuration["Okta:Authority"];
+//    options.ClientId = builder.Configuration["Okta:ClientId"];
+//    options.ClientSecret = builder.Configuration["Okta:ClientSecret"];
+//    options.ResponseType = "code";
+//    options.SaveTokens = true;
+//    options.CallbackPath = new PathString("/");
+//    options.RequireHttpsMetadata = false;
+//});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>

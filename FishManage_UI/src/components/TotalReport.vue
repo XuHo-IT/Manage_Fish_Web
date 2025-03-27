@@ -7,12 +7,9 @@
           <h4 class="mb-3">
             {{ totalUsers }}
             <span class="badge bg-light-success border border-success"
-              ><i class="ti ti-trending-up"></i> 70.5%</span
+              ><i class="ti ti-trending-up"></i>{{totalUsers/100}}%</span
             >
           </h4>
-          <p class="mb-0 text-muted text-sm">
-            You made an extra <span class="text-success">8,900</span> this year
-          </p>
         </div>
       </div>
     </div>
@@ -23,12 +20,9 @@
           <h4 class="mb-3">
             {{ totalProducts }}
             <span class="badge bg-light-warning border border-warning"
-              ><i class="ti ti-trending-down"></i> 27.4%</span
+              ><i class="ti ti-trending-up"></i>  {{ totalProducts /100 }}%</span
             >
           </h4>
-          <p class="mb-0 text-muted text-sm">
-            You made an extra <span class="text-warning">1,943</span> this year
-          </p>
         </div>
       </div>
     </div>
@@ -39,13 +33,10 @@
           <h4 class="mb-3" v-if="isAdmin">
             {{ totalOrders }}
             <span class="badge bg-light-danger border border-danger"
-              ><i class="ti ti-trending-down"></i> 27.4%</span
+              ><i class="ti ti-trending-up"></i>   {{ totalOrders/100 }}%</span
             >
           </h4>
-          <p class="mb-0 text-muted text-sm">
-            You made an extra
-            <span class="text-danger">$20,395</span> this year
-          </p>
+          
         </div>
       </div>
     </div>
