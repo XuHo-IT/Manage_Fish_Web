@@ -114,8 +114,8 @@ builder.Services.AddAuthentication(options =>
 })
 .AddFacebook(o =>
 {
-    o.ClientId = builder.Configuration["FaceBook:ClientId"];
-    o.ClientSecret = builder.Configuration["FaceBook:ClientSecret"];
+    o.ClientId = builder.Configuration["FaceBook:AppId"];
+    o.ClientSecret = builder.Configuration["FaceBook:AppSecret"];
 })
 .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
 {
