@@ -79,7 +79,7 @@
 <script setup>
 import { ref } from 'vue';
 import api from "@/js/api_auth.js";
-
+import Swal from "sweetalert2";
 
 const newCoupon = ref({
   couponCode: "",
@@ -106,9 +106,19 @@ const createCoupon = async () => {
 
   try {
     await api.post("CouponModel/CreateCoupon", formData);
-    alert("Coupon created successfully!");
+    Swal.fire({
+    icon: "success",
+    title: "Added to Cart!",
+    text: "Coupon created successfully!",
+    timer: 2000,
+    showConfirmButton: false,
+  }); 
   } catch (error) {
-    alert("Coupon creation failed!");
+    Swal.fire({
+      icon: "error",
+      title: "Invalid Quantity",
+      text: "Coupon creation failed!",
+    }); 
     console.error("Error:", error);
   }
 };

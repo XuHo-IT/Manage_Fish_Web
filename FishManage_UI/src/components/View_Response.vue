@@ -133,7 +133,7 @@ const totalSessions = ref(0);
 const series = ref([]);
 const isChartReady = ref(false);
 const roles = ref(["Admin", "Customer"]);
-const selectedRole = ref([]);
+import Swal from "sweetalert2";
 
 const chartOptions = ref({
   chart: {
@@ -160,10 +160,19 @@ const updateUserRole = async (user) => {
     await api.put(`User/UserRole/${user.id}`, updatedRole, {
       headers: { "Content-Type": "application/json" },
     });
-
-    alert(`Updated role for ${user.userName} to ${user.role}`);
+    Swal.fire({
+    icon: "success",
+    title: "Added to Cart!",
+    text: `Updated role for ${user.userName} to ${user.role}`,
+    timer: 2000,
+    showConfirmButton: false,
+  }); 
   } catch (error) {
-    alert("Error updating user role: " + error.response?.data?.message || error.message);
+    Swal.fire({
+      icon: "error",
+      title: "Invalid Quantity",
+      text: "Error updating user role: " + error.response?.data?.message || error.message,
+    }); 
   }
 };
 

@@ -102,88 +102,10 @@
   </div>
 </template>
 
-<!-- <script>   Vue Options API
-import api from "@/js/api_auth.js";
-
-export default {
-  computed: {
-  isAuthenticated() {
-    return this.$store.state.isAuthenticated;
-  },
-  isAdmin() {
-    return this.$store.state.isAdmin;
-  },
-  userId() {
-    return this.$store.state.userId;
-  }
-},
-
-  name: "CreateProduct",
-  data() {
-    return {
-      newProduct: {
-        ProductName: "",
-        Price: null,
-        Category: "",
-        Description: "",
-        Supplier: "",
-      },
-      imageFile: null,
-      validationErrors: [],
-    };
-  },
-  methods: {
-    handleImageUpload(event) {
-      this.imageFile = event.target.files[0];
-    },
-    async createProduct() {
-      this.validationErrors = [];
-
-      if (!this.newProduct.ProductName) {
-        this.validationErrors.push("ProductName is required.");
-      }
-      if (!this.newProduct.Description) {
-        this.validationErrors.push("Description is required.");
-      }
-      if (!this.imageFile) {
-        this.validationErrors.push("ImageURl is required.");
-      }
-      if (!this.newProduct.Category) {
-        this.validationErrors.push("Category is required.");
-      }
-      if (!this.newProduct.Supplier) {
-        this.validationErrors.push("Supplier is required.");
-      }
-      if (this.validationErrors.length > 0) {
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("ProductName", this.newProduct.ProductName);
-      formData.append("Price", this.newProduct.Price);
-      formData.append("Category", this.newProduct.Category);
-      formData.append("Description", this.newProduct.Description);
-      formData.append("Supplier", this.newProduct.Supplier);
-      formData.append("imageFile", this.imageFile);
-
-      try {
-        const response = api.post("FishProductAPI",formData);
-        alert("Product created successfully!");
-        console.log("Product created successfully:", response.data);
-      } catch (error) {
-        alert("Product created fail!");
-        console.error("Error creating product:", error);
-      }
-    },
-  },
-};
-</script> -->
-
-<!-- Vue Composition API -->
 <script setup>
 import { ref } from "vue";
 import api from "@/js/api_auth.js";
-
+import Swal from "sweetalert2";
 const newProduct = ref({
   ProductName: "",
   Price: null,
@@ -239,9 +161,20 @@ const createProduct = async () => {
       },
     });
     window.location.reload();
-    alert("Product created successfully!");
+    Swal.fire({
+    icon: "success",
+    title: "Added to Cart!",
+    text: "Product created successfully!",
+    timer: 2000,
+    showConfirmButton: false,
+  }); 
+
   } catch (error) {
-    alert("Product creation failed!");
+    Swal.fire({
+      icon: "error",
+      title: "Invalid Quantity",
+      text: "Product creation failed!",
+    }); 
   }
 };
 </script>

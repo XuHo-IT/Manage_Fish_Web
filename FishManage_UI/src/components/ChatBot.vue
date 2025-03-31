@@ -34,13 +34,12 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import api from "@/js/api_auth.js";
-
+import Swal from "sweetalert2";
 
 const isChatOpen = ref(false);
 const questions = ref([]);
 const selectedQuestion = ref("");
 const messages = ref([]);
-
 
 
 const toggleChat = () => {
@@ -57,7 +56,8 @@ const fetchQuestions = async () => {
     const response = await api.get("chatbot/questions");
     questions.value = response.data.questions;
   } catch (error) {
-    console.error("Error fetching questions:", error);
+    console.error("Error", error);
+
   }
 };
 const askQuestion = async () => {
@@ -69,11 +69,10 @@ const askQuestion = async () => {
     const response = await api.post("chatbot/ask", {
       message: selectedQuestion.value,
     });
-
     messages.value.push({ text: response.data.response, type: "bot" });
     localStorage.setItem("chatMessages", JSON.stringify(messages.value)); // Save messages
   } catch (error) {
-    console.error("Error sending question:", error);
+    console.error("Error", error);
     messages.value.push({ text: "Error connecting to chatbot.", type: "bot" });
     localStorage.setItem("chatMessages", JSON.stringify(messages.value)); // Save messages
   }
@@ -85,7 +84,6 @@ onMounted(fetchQuestions);
 </script>
 
 <style>
-/* Chat Container */
 .chat-container {
   position: fixed;
   bottom: 20px;
@@ -97,24 +95,22 @@ onMounted(fetchQuestions);
   padding: 15px;
   z-index: 1000;
 }
-
-/* Button Styling */
 .btn-open-chat {
-  background-color: #0de329; /* Blue background */
+  position: fixed; 
+  bottom: 20px; 
+  right: 20px; 
+  background-color: #0de329; 
   color: white;
-  width: 60px; /* Make width and height equal */
+  width: 60px; 
   height: 60px;
   border: none;
   cursor: pointer;
   font-size: 14px;
-  border-radius: 50%; /* Fully circular */
+  border-radius: 50%; 
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
-  transition:
-    background 0.3s ease,
-    transform 0.2s ease;
   margin-left: auto;
 
 }
@@ -142,7 +138,6 @@ onMounted(fetchQuestions);
   background: #f9f9f9;
 }
 
-/* Chat Message */
 .chat-message {
   margin: 5px 0;
 }

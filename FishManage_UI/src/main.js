@@ -1,4 +1,5 @@
 import { createApp } from "vue";
+import { createPinia } from "pinia";
 import App from "./App.vue";
 import router from "./router/index.js";
 import store from "./js/store.js";
@@ -24,8 +25,8 @@ import Profile from "./components/Profile.vue";
 import CallBack from "./components/CallBack.vue";
 import Recognition from "./components/Recognition.vue";
 
-// Create the main Vue app
 const app = createApp(App);
+app.use(createPinia());
 app.use(router);
 app.use(store);
 app.use(VueApexCharts);
@@ -49,14 +50,13 @@ const components = {
   Voice,
   Profile,
   CallBack,
-  Recognition
+  Recognition,
 };
 
 Object.entries(components).forEach(([name, component]) => {
   app.component(name, component);
 });
 
-// Mount the main app to `#app`
 app.mount("#app");
 
 // Mount additional components dynamically
