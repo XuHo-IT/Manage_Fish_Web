@@ -51,6 +51,7 @@
 </style>
 <script>
 import axios from "axios";
+import Swal from "sweetalert2";
 export default {
   data() {
     return {
@@ -64,11 +65,19 @@ export default {
         await axios.post("https://localhost:7229/api/User/forgotPass", {
           email: this.email,
         });
-        alert("Password reset link sent to your email. Please check your inbox.");
+        Swal.fire({
+          icon: "success",
+          title: "Great!!",
+          text: "Password reset link sent to your email. Please check your inbox.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
       } catch (error) {
-        this.message =
-          error.response?.data?.errorMessages?.[0] || "An error occurred. Please try again.";
-        alert(this.message);
+        Swal.fire({
+          icon: "error",
+          title: "Error!",
+          text: error.response?.data?.errorMessages?.[0] || "An error occurred. Please try again.",
+        });
       }
     },
   },

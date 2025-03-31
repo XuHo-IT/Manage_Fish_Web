@@ -112,7 +112,9 @@
         Pay By COD
       </button>
       <h6>
-        <a class="btn btn-primary btn-block btn-lg" href="https://localhost:5173/">Cancel and return to website</a>
+        <a class="btn btn-primary btn-block btn-lg" href="https://localhost:5173/"
+          >Cancel and return to website</a
+        >
       </h6>
       <router-view></router-view>
     </div>
@@ -137,20 +139,20 @@
 import { ref, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/js/api_auth.js";
-import { useAlertStore } from "@/js/useAlertStore";
-const alertStore = useAlertStore;
+import Swal from "sweetalert2";
+
 const isAuthenticated = ref(false);
 const isAdmin = ref(false);
 const userId = ref(null);
 
 const loadAuthState = () => {
-      const authenticated = localStorage.getItem("token");
-      isAuthenticated.value = !!authenticated;
-      const userIdParam = localStorage.getItem("userId");
-      userId.value = userIdParam;
-      const role =localStorage.getItem("role");
-      if (role == "admin") isAdmin.value = "true";  
-    };
+  const authenticated = localStorage.getItem("token");
+  isAuthenticated.value = !!authenticated;
+  const userIdParam = localStorage.getItem("userId");
+  userId.value = userIdParam;
+  const role = localStorage.getItem("role");
+  if (role == "admin") isAdmin.value = "true";
+};
 const cart = ref([]);
 const total = ref(0);
 const userInfo = ref({
@@ -186,7 +188,7 @@ const fetchCoupons = async () => {
       console.log(coupons.value);
     }
   } catch (error) {
-    console.error("Error fetching coupons:", error);
+    console.error("Error", error);
   }
 };
 
@@ -198,7 +200,7 @@ const fetchProvinces = async () => {
       provinces.value = data.data;
     }
   } catch (error) {
-    console.error("Error fetching provinces:", error);
+    console.error("Error", error);
   }
 };
 
@@ -212,7 +214,7 @@ watch(selectedProvince, async (newVal) => {
         wards.value = []; // Reset wards
       }
     } catch (error) {
-      console.error("Error fetching districts:", error);
+      console.error("Error", error);
     }
   }
 });
@@ -226,7 +228,7 @@ watch(selectedDistrict, async (newVal) => {
         wards.value = data.data;
       }
     } catch (error) {
-      console.error("Error fetching wards:", error);
+      console.error("Error", error);
     }
   }
 });
@@ -252,7 +254,12 @@ const checkCoupon = async () => {
     coupons.value.find((c) => c.couponCode === selectedCouponCode.value) || null;
 
   if (!selectedCoupon.value || !selectedCoupon.value.couponId) {
-    alertStore.showAlert("Please enter a valid coupon code.");
+    Swal.fire({
+      icon: "error",
+      title: "Invalid Quantity",
+      text: "Please enter a valid coupon code.",
+    });
+
     return;
   }
 
@@ -273,53 +280,50 @@ const checkCoupon = async () => {
     if (response.status === 200) {
       newTotal.value = data.newTotal.toFixed(2).toString();
     } else {
-    alertStore.showAlert("Failed to apply the coupon.Please try again");
-
+      Swal.fire({
+        icon: "error",
+        title: "Invalid Quantity",
+        text: "Failed to apply the coupon.Please try again",
+      });
     }
   } catch (error) {
-    console.error("Error during coupon validation:", error);
-    alertStore.showAlert("An error occurred while applying the coupon.Please try again");
+    console.error("Error", error);
   }
 };
 const fetchUserById = async () => {
   try {
     const response = await api.get(`User/${localStorage.getItem("userId")}`);
-    const data = response.data; 
+    const data = response.data;
     if (!data) {
       console.error("Invalid user data:", data);
       return null;
     }
-    return data.result; 
+    return data.result;
   } catch (error) {
     console.error("Error fetching user:", error);
-    return null; 
+    return null;
   }
 };
 
 const createPaymentByCOD = async () => {
-  if (isAuthenticated.value = true) {
+  if ((isAuthenticated.value = true)) {
     try {
       const user = await fetchUserById();
-      console.log("User"+user);
       const cartItems = JSON.parse(localStorage.getItem("cart") || "[]");
-      console.log(cartItems);
-      const response = await api.post(
-        "PaymentAPI/CreatePaymentCOD",
-     {
-          orderId: new Date().getTime().toString(),
-          userId: localStorage.getItem("userId"),
-          name: user.name,
-          address: user.address,
-          email: user.email,
-          phoneNumber: user.phoneNumber,
-          totalAmount: Math.round(newTotal.value * 25.475 * 10000).toString(),
-          paymentMethod: "COD",
-          products: cartItems.map((item) => ({
-            productId: item.productId,
-            quantity: item.quantity,
-          })),
-        },
-      );
+      const response = await api.post("PaymentAPI/CreatePaymentCOD", {
+        orderId: new Date().getTime().toString(),
+        userId: localStorage.getItem("userId"),
+        name: user.name,
+        address: user.address,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        totalAmount: Math.round(newTotal.value * 25.475 * 10000).toString(),
+        paymentMethod: "COD",
+        products: cartItems.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+        })),
+      });
       const textResponse = await response.data;
       router.push({
         name: "CallBack",
@@ -341,7 +345,6 @@ const createPaymentByCOD = async () => {
   } else {
     try {
       const cartItems = JSON.parse(localStorage.getItem("cart") || "[]");
-      console.log(cartItems);
       const response = await api.post(
         "PaymentAPI/CreatePaymentCOD",
         JSON.stringify({
@@ -382,7 +385,7 @@ const createPaymentByCOD = async () => {
 };
 
 const createPayment = async () => {
-  if (isAuthenticated.value = true) {
+  if ((isAuthenticated.value = true)) {
     try {
       const user = await fetchUserById();
       const cartItems = JSON.parse(localStorage.getItem("cart") || "[]");
@@ -401,9 +404,6 @@ const createPayment = async () => {
           quantity: item.quantity,
         })),
       });
-
-      console.log("Server response:", response.data);
-
       if (!response.data || !response.data.payUrl) {
         throw new Error("Invalid response from server");
       }
@@ -429,9 +429,6 @@ const createPayment = async () => {
           quantity: item.quantity,
         })),
       });
-
-      console.log("Server response:", response.data);
-
       if (!response.data || !response.data.payUrl) {
         throw new Error("Invalid response from server");
       }

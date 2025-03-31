@@ -107,7 +107,7 @@
 <script setup>
 import { ref } from "vue";
 import api from "@/js/api_auth.js";
-
+import Swal from "sweetalert2";
 const props = defineProps({
   product: {
     type: Object,
@@ -129,7 +129,11 @@ const handleFileUploadUpdate = (event) => {
 
 const editProduct = async () => {
   if (!props.product.productId) {
-    alert("Product ID is missing!");
+    Swal.fire({
+      icon: "error",
+      title: "Fail choosing prodcut",
+      text: "Please choose again",
+    }); 
     return;
   }
 
@@ -158,11 +162,19 @@ const editProduct = async () => {
         },
       },
     );
-    alert("Product updated successfully!");
-    console.log("Product updated successfully:", response.data);
+    Swal.fire({
+    icon: "success",
+    title: "Success!",
+    text: "Product updated successfully!",
+    timer: 2000,
+    showConfirmButton: false,
+  }); 
   } catch (error) {
-    alert("Error updating product!");
-    console.error("Error updating product:", error.response ? error.response.data : error);
+    Swal.fire({
+      icon: "error",
+      title: "Error!",
+      text: "Error updating product!",
+    }); 
   }
 };
 </script>

@@ -60,11 +60,11 @@
               <button type="button" class="login100-form-btn" @click="handleLogin">Sign In</button>
             </div>
 
-            <div class="container-login100-form-btn m-t-17">
+            <!-- <div class="container-login100-form-btn m-t-17">
               <button type="button" class="login100-form-btn" @click="loginWithOkta">
                 Sign In with Okta
               </button>
-            </div>
+            </div> -->
 
             <div class="w-full text-center p-t-55">
               <span class="txt2"> Not a member? </span>
@@ -241,13 +241,12 @@
 import api from "@/js/api_auth.js";
 import { ref, onMounted, watch } from "vue";
 import { OktaAuth } from "@okta/okta-auth-js";
-import { useAlertStore } from "@/js/useAlertStore";
-const alertStore = useAlertStore;
+
 const showModal = ref(false);
 const isLogin = ref(true);
 const isAuthenticated = ref(!!localStorage.getItem("token"));
-const isAdmin = ref(false);
-const userId = ref(null);
+
+import Swal from "sweetalert2";
 
 const loginData = ref({ userName: "", password: "" });
 
@@ -297,7 +296,8 @@ const fetchProvinces = async () => {
       provinces.value = data.data;
     }
   } catch (error) {
-    console.error("Error fetching provinces:", error);
+    console.error("Error", error);
+
   }
 };
 
@@ -311,7 +311,8 @@ watch(selectedProvince, async (newVal) => {
         wards.value = []; // Reset wards
       }
     } catch (error) {
-      console.error("Error fetching districts:", error);
+      console.error("Error", error);
+
     }
   }
 });
@@ -325,7 +326,8 @@ watch(selectedDistrict, async (newVal) => {
         wards.value = data.data;
       }
     } catch (error) {
-      console.error("Error fetching wards:", error);
+      console.error("Error", error);
+
     }
   }
 });
@@ -348,7 +350,6 @@ const handleLogin = async () => {
       if (!token) {
         throw new Error("Token is missing from response");
       }
-
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
       localStorage.setItem("userId", user.id);
@@ -359,8 +360,8 @@ const handleLogin = async () => {
       throw new Error(response.data.errorMessages?.[0] || "Invalid login response");
     }
   } catch (error) {
-    errorMessage.value =
-      error.response?.data?.errorMessages?.[0] || "An error occurred during login";
+    console.error("Error", error);
+
   }
 };
 const authClient = new OktaAuth({
@@ -440,7 +441,6 @@ const handleRegister = async () => {
       DateOfBirth: new Date(registerData.value.DateOfBirth).toISOString(),
       imageFile: "",
     };
-    console.log(payload);
     const response = await api.post("User/register", payload, {
       headers: {
         "Content-Type": "multipart/form-data",
@@ -452,8 +452,11 @@ const handleRegister = async () => {
     window.location.href = "https://localhost:5173/";
     clearForm();
   } catch (error) {
-    errorMessage.value = error.response?.data?.errorMessages?.[0] || "An error occurred";
-    alertStore.showAlert("Registration fail with" + errorMessage.value);
+    Swal.fire({
+      icon: "error",
+      title: "An error occurred",
+      text: "Registration fail with" +  error.response?.data?.errorMessages?.[0] 
+    }); 
   }
 };
 
@@ -485,10 +488,13 @@ const socialLogin = (provider) => {
       (response) => {
         if (response.authResponse) {
           let accessToken = response.authResponse.accessToken;
-          console.log(accessToken);
           handleFacebookLogin(accessToken);
         } else {
-          console.error("Facebook login failed", response);
+          Swal.fire({
+      icon: "error",
+      title: "An error occurred",
+      text: "Facebook login failed", response
+    }); 
         }
       },
       { scope: "email,public_profile" },
@@ -518,10 +524,15 @@ const handleFacebookLogin = async (accessToken) => {
 
       window.location.href = `https://localhost:5173/?userId=${encodeURIComponent(data.userId)}&isAuthenticated=true&isAdmin=${data.isAdmin}`;
     } else {
-      console.error("Login failed", data);
+      Swal.fire({
+      icon: "error",
+      title: "An error occurred",
+      text: "Login failed", data
+    }); 
     }
   } catch (error) {
-    console.error("Error logging in with Facebook:", error);
+    console.error("Error", error);
+
   }
 };
 

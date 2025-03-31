@@ -53,11 +53,12 @@
     <ul class="d-flex justify-content-end list-unstyled m-0">
       <!-- Separate Section for Auth Modal -->
       <li></li>
-      <li>
-        <a href="#" class="p-2 mx-1" @click="toggleCart">
+      <li class="position-relative">
+        <a href="#" class="p-2 mx-1 position-relative" @click="toggleCart">
           <svg width="24" height="24">
             <use xlink:href="#shopping-bag"></use>
           </svg>
+          <span v-if="cart.length" class="cart-badge">{{ cart.length }}</span>
         </a>
       </li>
     </ul>
@@ -75,12 +76,24 @@
         <button type="button" class="btn-close" @click="toggleCart" aria-label="Close"></button>
       </div>
       <div class="offcanvas-body">
-        <div v-for="(item, index) in cart" :key="index" class="cart-item">
-          <h6>{{ item.productName }}</h6>
-          <p>Quantity: {{ item.quantity }}</p>
-          <p>Price: ${{ item.price }}</p>
-          <p>Total: ${{ (item.price * item.quantity).toFixed(2) }}</p>
+        <div
+          v-for="(item, index) in cart"
+          :key="index"
+          class="cart-item d-flex justify-content-between align-items-center"
+        >
+          <div class="cart-details">
+            <h6>{{ item.productName }}</h6>
+            <p>Quantity: {{ item.quantity }}</p>
+            <p>Price: ${{ item.price }}</p>
+            <p>Total: ${{ (item.price * item.quantity).toFixed(2) }}</p>
+          </div>
+          <button
+            type="button"
+            class="btn-close btn-remove"
+            @click="removeFromCart(index)"
+          ></button>
         </div>
+
         <div class="d-flex justify-content-between">
           <h5>Total:</h5>
           <h5>${{ cartTotal.toFixed(2) }}</h5>
@@ -152,19 +165,19 @@
                             type="number"
                             class="form-control border-dark-subtle input-number quantity"
                             v-model.number="quantities[product.productId]"
-                            min="0"
-                            value="0"
-                            placeholder="0"
+                            min="1"
+                            value="1"
+                            placeholder="1"
                           />
-
                           <div class="col-5 btn-buy-user">
                             <button
                               @click="addToCart(product)"
-                              class="btn btn-primary rounded-1 p-2 fs-7 btn-cart"
+                              class="btn btn-primary rounded-1 p-2 fs-7 btn-cart d-flex align-items-center gap-2"
                             >
                               <svg class="svg-buy" width="18" height="18">
                                 <use xlink:href="#cart"></use>
                               </svg>
+                              <span class="buy">Buy Now</span>
                             </button>
                           </div>
                           <div class="col-2">
@@ -248,6 +261,52 @@ svg.svg-buy {
 .btn-buy-user {
   width: calc(100% / 1.4);
 }
+.cart-badge {
+  position: absolute;
+  top: 22px;
+  right: -24px;
+  background-color: red;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+}
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  position: relative;
+}
+
+.cart-details {
+  flex-grow: 1; /* Ensures text takes available space */
+}
+
+.btn-remove {
+  background-color: red !important; /* Sets red color */
+  color: white !important; /* White close icon */
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.btn-remove:hover {
+  background-color: darkred; /* Darker red on hover */
+}
 </style>
 
 <script setup>
@@ -278,9 +337,8 @@ import CreateCoupon from "./CreateCoupon.vue";
 import Voice from "./Voice.vue";
 import ChatBot from "./ChatBot.vue";
 import { eventBus, eventBus2 } from "@/js/eventBus.js";
-import { useAlertStore } from "@/js/useAlertStore";
+import Swal from "sweetalert2";
 
-const alertStore = useAlertStore;
 const minPrice = ref(0);
 const maxPrice = ref(100);
 const sortOrder = ref("default");
@@ -294,7 +352,6 @@ const isCreatingCoupon = ref(false);
 const currentProduct = ref(null);
 const cart = ref([]);
 const searchTerm = ref([]);
-const token = ref(null);
 
 const isAuthenticated = ref(false);
 const isAdmin = ref(false);
@@ -316,25 +373,36 @@ onMounted(() => {
 const addToCart = (product) => {
   const quantity = quantities.value[product.productId] || 0;
   if (quantity < 0) {
-    alertStore.showAlert("Please select a valid product quantity!");
+    Swal.fire({
+      icon: "error",
+      title: "Invalid Quantity",
+      text: "Please select a valid product quantity!",
+    });
     return;
   }
 
   const existingProduct = cart.value.find((item) => item.productId === product.productId);
 
   if (existingProduct) {
-    existingProduct.quantity -= quantity;
+    existingProduct.quantity += quantity;
   } else {
     cart.value.push({
       ...product,
       quantity: quantity,
     });
-    alertStore.showAlert("Registration successful!", "success");
-
-    // alertStore.showAlert("Product has been added to your cart!");
+    Swal.fire({
+      icon: "success",
+      title: "Added to Cart!",
+      text: "Product has been added to your cart!",
+      timer: 1000,
+      showConfirmButton: false,
+    });
   }
+  quantities.value[product.productId] =1;
+};
 
-  quantities.value[product.productId] = 0;
+const removeFromCart = (index) => {
+  cart.value.splice(index, 1);
 };
 
 const cartTotal = computed(() => {
@@ -384,20 +452,29 @@ const processVoiceCommand = () => {
     } else {
       quantity = parseInt(quantity);
     }
-
     const product = products.value.find((p) =>
       p.productName.toLowerCase().includes(productName.toLowerCase()),
     );
-
-    console.log(product);
     if (product) {
       quantities.value[product.productId] = quantity;
       addToCart(product);
     } else {
-      alert(`Product "${productName}" not found.`);
+      Swal.fire({
+        icon: "error",
+        title: "Not found!",
+        text: `Product "${productName}" not found.`,
+        timer: 2000,
+        showConfirmButton: false,
+      });
     }
   } else {
-    alert("Could not recognize the product and quantity.");
+    Swal.fire({
+      icon: "error",
+      title: "Not recognize!",
+      text: "Could not recognize the product and quantity.",
+      timer: 2000,
+      showConfirmButton: false,
+    });
   }
 };
 
@@ -425,15 +502,19 @@ const fetchSortedProducts = async () => {
 
     const apiUrl = `${apiEndpoint}?min=${minPrice.value}&max=${maxPrice.value}&searchTerm=${encodeURIComponent(searchTerm.value) || eventBus.result}`;
     const response = await api.get(apiUrl);
-
     if (response.data.isSuccess) {
       products.value = response.data.result;
-      console.log("data:", products.value);
     } else {
-      console.error("Error fetching data:", response.data.errorMessages);
+      Swal.fire({
+        icon: "eroor",
+        title: "Success",
+        text: "Error fetching data:" + response.data.errorMessages.join(", "),
+        timer: 2000,
+        showConfirmButton: false,
+      });
     }
   } catch (error) {
-    console.error("Error fetching data:", error);
+    console.error("Error", error);
   }
 };
 
@@ -441,11 +522,16 @@ const deleteProduct = async (productId) => {
   try {
     await api.delete(`/FishProductAPI/${productId}`);
     window.location.reload();
-    alert("Product deleted successfully!");
+    Swal.fire({
+      icon: "success",
+      title: "Success",
+      text: "Product deleted successfully!",
+      timer: 2000,
+      showConfirmButton: false,
+    });
     handleSearch();
   } catch (error) {
-    console.error("Error deleting product:", error);
-    alert("Error deleting product. Please try again.");
+    console.error("Error:", error);
   }
 };
 
@@ -462,7 +548,7 @@ const trackView = async () => {
   try {
     await api.post("Analytics/TrackView");
   } catch (error) {
-    console.error("Error tracking view:", error);
+    console.error("Error ", error);
   }
 };
 
@@ -470,7 +556,7 @@ const startSession = async () => {
   try {
     await api.post("Analytics/StartSession");
   } catch (error) {
-    console.error("Error starting session:", error);
+    console.error("Error", error);
   }
 };
 
@@ -478,7 +564,7 @@ const endSession = async () => {
   try {
     await axios.post(`${api}/Analytics/EndSessions`);
   } catch (error) {
-    console.error("Error ending session:", error);
+    console.error("Error ", error);
   }
 };
 
