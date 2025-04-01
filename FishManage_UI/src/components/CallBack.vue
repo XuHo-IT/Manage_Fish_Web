@@ -39,10 +39,6 @@ async function handleRedirect() {
     });
   }
 }
-
-Onmounted = () => {
-  handleRedirect();
-};
 </script>
 
 <style scoped>

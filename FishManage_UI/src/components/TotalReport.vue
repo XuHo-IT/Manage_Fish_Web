@@ -33,7 +33,7 @@
           <h4 class="mb-3" v-if="isAdmin">
             {{ totalOrders }}
             <span class="badge bg-light-danger border border-danger"
-              ><i class="ti ti-trending-up"></i>   {{ totalOrders/100 }}%</span
+              ><i class="ti ti-trending-up"></i> {{ totalOrders/100 }}%</span
             >
           </h4>
           
@@ -79,7 +79,7 @@ const getTotalProducts = async () => {
 };
 const getTotalOrders = async () => {
   try {
-    const response = await api.get("FishOrderAPI");
+    const response = await api.get("FishOrderAPI/GetOrderList");
     totalOrders.value = response.data.result.length;
   } catch (error) {
     console.error("Error fetching total orders:", error);

@@ -8,7 +8,6 @@ using Fish_Manage.Service.IService;
 using Fish_Manage.Service.Momo;
 using Fish_Manage.Service.Payment;
 using Fish_Manage.Service.Vosk;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -60,6 +59,7 @@ async Task CreateRoles(IServiceProvider serviceProvider)
 // Configure AutoMapper, Repositories, and Services
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IPaymentCODService, PaymentCODService>();
 builder.Services.AddScoped<ICouponModelRepository, CouponModelRepository>();
 builder.Services.AddScoped<EmailSender>();
@@ -76,7 +76,6 @@ builder.Services.AddSingleton<CloudinaryService>();
 //JWT
 builder.Services.AddScoped<JwtService>();
 
-builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddAutoMapper(typeof(MappingConfig));
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options =>
@@ -95,11 +94,9 @@ var key = builder.Configuration["ApiSettings:Secret"];
 
 builder.Services.AddAuthentication(options =>
 {
-    // Default scheme must be Cookies for Google OAuth to work
-    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; // Set JWT as the default scheme
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-.AddCookie() //  Required for Google OAuth state tracking
 .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
 {
     options.RequireHttpsMetadata = false;
@@ -109,7 +106,8 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
         ValidateIssuer = false,
-        ValidateAudience = false
+        ValidateAudience = false,
+        ValidateLifetime = true,
     };
 })
 .AddFacebook(o =>
@@ -117,12 +115,14 @@ builder.Services.AddAuthentication(options =>
     o.ClientId = builder.Configuration["FaceBook:AppId"];
     o.ClientSecret = builder.Configuration["FaceBook:AppSecret"];
 })
+.AddCookie()
 .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
 {
     options.ClientId = builder.Configuration["GoogleKeys:ClientId"];
     options.ClientSecret = builder.Configuration["GoogleKeys:ClientSecret"];
     options.SignInScheme = IdentityConstants.ExternalScheme;
 });
+
 
 //okta
 //.AddOpenIdConnect(options =>
@@ -205,6 +205,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -212,7 +213,6 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseHttpsRedirection();
-
 app.UseCors("AllowAll");
 
 app.UseAuthentication();

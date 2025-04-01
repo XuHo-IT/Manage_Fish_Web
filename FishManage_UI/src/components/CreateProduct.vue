@@ -153,28 +153,27 @@ const createProduct = async () => {
   formData.append("Supplier", newProduct.value.Supplier);
   formData.append("imageFile", imageFile.value);
 
-
   try {
     const response = await api.post("FishProductAPI", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     });
-    window.location.reload();
     Swal.fire({
-    icon: "success",
-    title: "Added to Cart!",
-    text: "Product created successfully!",
-    timer: 2000,
-    showConfirmButton: false,
-  }); 
-
+      icon: "success",
+      title: "CREATE!!",
+      text: "Product created successfully!",
+      timer: 2000,
+      showConfirmButton: false,
+    });
+    window.location.reload();
   } catch (error) {
     Swal.fire({
       icon: "error",
-      title: "Invalid Quantity",
+      title: "Fail",
       text: "Product creation failed!",
-    }); 
+      error,
+    });
   }
 };
 </script>
