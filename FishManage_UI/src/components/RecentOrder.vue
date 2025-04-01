@@ -46,7 +46,7 @@ const orders = ref([]);
 
 const getTotalOrders = async () => {
   try {
-    const response = await api.get("FishOrderAPI");
+    const response = await api.get("FishOrderAPI/GetOrderList");
     orders.value = response.data.result;
   } catch (error) {
     console.error("Error fetching total orders:", error);

@@ -165,9 +165,9 @@
                             type="number"
                             class="form-control border-dark-subtle input-number quantity"
                             v-model.number="quantities[product.productId]"
-                            min="1"
-                            value="1"
-                            placeholder="1"
+                            min="0"
+                            value="0"
+                            placeholder="0"
                           />
                           <div class="col-5 btn-buy-user">
                             <button
@@ -372,7 +372,7 @@ onMounted(() => {
 
 const addToCart = (product) => {
   const quantity = quantities.value[product.productId] || 0;
-  if (quantity < 0) {
+  if (quantity <= 0) {
     Swal.fire({
       icon: "error",
       title: "Invalid Quantity",
@@ -398,7 +398,7 @@ const addToCart = (product) => {
       showConfirmButton: false,
     });
   }
-  quantities.value[product.productId] =1;
+  quantities.value[product.productId] = 0;
 };
 
 const removeFromCart = (index) => {
@@ -521,14 +521,14 @@ const fetchSortedProducts = async () => {
 const deleteProduct = async (productId) => {
   try {
     await api.delete(`/FishProductAPI/${productId}`);
-    window.location.reload();
     Swal.fire({
       icon: "success",
       title: "Success",
       text: "Product deleted successfully!",
-      timer: 2000,
+      timer: 4000,
       showConfirmButton: false,
     });
+    window.location.reload();
     handleSearch();
   } catch (error) {
     console.error("Error:", error);

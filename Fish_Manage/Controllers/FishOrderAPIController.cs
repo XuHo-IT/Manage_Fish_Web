@@ -26,12 +26,12 @@ namespace Fish_Manage.Controllers
             _mapper = mapper;
         }
 
-        [HttpGet]
+        [HttpGet("GetOrderList")]
         [Authorize(Roles = "admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<APIResponse>> GetOrders()
+        public async Task<ActionResult<APIResponse>> GetOrderList()
         {
             try
             {
