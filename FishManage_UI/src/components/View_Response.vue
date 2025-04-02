@@ -1,36 +1,9 @@
 <template>
-  <div class="col-md-12 col-xl-8" style="width: 100%;">
+  <div class="col-md-12 col-xl-8" style="width: 100%">
     <div class="d-flex align-items-center justify-content-between mb-3">
-      <h5 class="mb-0">Unique Visitor</h5>
+      <h5 class="mb-0">Regitered Member</h5>
       <ul class="nav nav-pills justify-content-end mb-0" id="chart-tab-tab" role="tablist">
-        <li class="nav-item" role="presentation">
-          <button
-            class="nav-link"
-            id="chart-tab-home-tab"
-            data-bs-toggle="pill"
-            data-bs-target="#chart-tab-home"
-            type="button"
-            role="tab"
-            aria-controls="chart-tab-home"
-            aria-selected="true"
-          >
-            Month
-          </button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button
-            class="nav-link active"
-            id="chart-tab-profile-tab"
-            data-bs-toggle="pill"
-            data-bs-target="#chart-tab-profile"
-            type="button"
-            role="tab"
-            aria-controls="chart-tab-profile"
-            aria-selected="false"
-          >
-            Week
-          </button>
-        </li>
+        <li class="nav-item" role="presentation"></li>
       </ul>
     </div>
     <div class="card">
@@ -53,8 +26,8 @@
             tabindex="0"
           >
             <div class="d-flex justify-content-between mb-3">
-              <div><strong>Total Views:</strong> {{ totalViews }}</div>
-              <div><strong>Total Sessions:</strong> {{ totalSessions }}</div>
+              <div style="color: red"><strong>Total Views:</strong> {{ totalViews }}</div>
+              <div style="color: red"><strong>Total Sessions:</strong> {{ totalSessions }}</div>
             </div>
             <div id="visitor-chart">
               <VueApexCharts
@@ -161,18 +134,18 @@ const updateUserRole = async (user) => {
       headers: { "Content-Type": "application/json" },
     });
     Swal.fire({
-    icon: "success",
-    title: "Added to Cart!",
-    text: `Updated role for ${user.userName} to ${user.role}`,
-    timer: 2000,
-    showConfirmButton: false,
-  }); 
+      icon: "success",
+      title: "Added to Cart!",
+      text: `Updated role for ${user.userName} to ${user.role}`,
+      timer: 2000,
+      showConfirmButton: false,
+    });
   } catch (error) {
     Swal.fire({
       icon: "error",
       title: "Invalid Quantity",
       text: "Error updating user role: " + error.response?.data?.message || error.message,
-    }); 
+    });
   }
 };
 

@@ -25,24 +25,22 @@
           <option value="desc">Price: High to Low</option>
         </select>
       </div>
-
-      <!-- Price Range Slider -->
       <div class="col-md-4 p-2">
         <p>Price Range: ${{ minPrice }} - ${{ maxPrice }}</p>
-        <div class="slider d-flex">
+        <div class="slider d-flex align-items-center">
           <input
             type="range"
             v-model="minPrice"
-            min="0"
-            max="50"
+            :min="0"
+            :max="100"
             @input="fetchSortedProducts"
             class="form-range me-2"
           />
           <input
             type="range"
             v-model="maxPrice"
-            min="51"
-            max="100"
+            :min="101"
+            :max="200"
             @input="fetchSortedProducts"
             class="form-range"
           />
@@ -132,7 +130,9 @@
               >
                 <div v-for="(product, index) in products" :key="index" class="col">
                   <div
-                    :class="{ disabled: product.quantity === 0 && !isAdmin }"
+                    :class="{
+                      disabled: product.quantity === 0,
+                    }"
                     class="product-item"
                   >
                     <figure>
@@ -310,24 +310,6 @@ svg.svg-buy {
 </style>
 
 <script setup>
-document.addEventListener("DOMContentLoaded", function () {
-  const quantityElement = document.querySelector(".quantity-check");
-  const productItem = document.querySelector(".product-item");
-
-  if (quantityElement && productItem) {
-    // Extract number from text
-    const quantityText = quantityElement.textContent.match(/\d+/);
-    // Convert to number
-    const quantity = quantityText ? parseInt(quantityText[0], 10) : 0;
-
-    if (quantity === 0) {
-      productItem.classList.add("disabled");
-      productItem.style.pointerEvents = "none";
-      productItem.style.opacity = "0.5";
-    }
-  }
-});
-
 import { ref, onMounted, computed, onBeforeUnmount, watch } from "vue";
 import api from "@/js/api_auth.js";
 import Modal from "./Modal.vue";

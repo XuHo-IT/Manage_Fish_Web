@@ -6,6 +6,10 @@
         <tr>
           <th>Order ID</th>
           <th>User ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Address</th>
+          <th>PhoneNumber</th>
           <th>Order Date</th>
           <th>Total Amount</th>
           <th>Payment Method</th>
@@ -20,6 +24,10 @@
           <tr v-for="(product, index) in order.products" :key="product.productId">
             <td v-if="index === 0" :rowspan="order.products.length">{{ order.orderId }}</td>
             <td v-if="index === 0" :rowspan="order.products.length">{{ order.userId }}</td>
+            <td v-if="index === 0" :rowspan="order.products.length">{{ order.name }}</td>
+            <td v-if="index === 0" :rowspan="order.products.length">{{ order.email }}</td>
+            <td v-if="index === 0" :rowspan="order.products.length">{{ order.address }}</td>
+            <td v-if="index === 0" :rowspan="order.products.length">{{ order.phoneNumber }}</td>
             <td v-if="index === 0" :rowspan="order.products.length">
               {{ new Date(order.orderDate).toLocaleString() }}
             </td>

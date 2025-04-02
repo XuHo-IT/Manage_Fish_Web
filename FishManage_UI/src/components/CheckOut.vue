@@ -9,15 +9,6 @@
         <label for="phoneNumber" class="form-label">Phone Number</label>
         <input type="text" class="form-control" v-model="userInfo.phoneNumber" required />
       </div>
-
-      <div class="mb-3">
-        <label for="city" class="form-label">City</label>
-        <input type="text" class="form-control" v-model="userInfo.city" required />
-      </div>
-      <div class="mb-3">
-        <label for="zipCode" class="form-label">Zip Code</label>
-        <input type="text" class="form-control" v-model="userInfo.zipCode" required />
-      </div>
       <div class="mb-3">
         <label for="email" class="form-label">Email</label>
         <input type="email" class="form-control" v-model="userInfo.email" required />
@@ -160,7 +151,6 @@ const userInfo = ref({
   FullName: "",
   phoneNumber: "",
   address: "",
-  zipCode: "",
   email: "",
 });
 const shippingPrice = ref(0);
@@ -290,33 +280,18 @@ const checkCoupon = async () => {
     console.error("Error", error);
   }
 };
-const fetchUserById = async () => {
-  try {
-    const response = await api.get(`User/${localStorage.getItem("userId")}`);
-    const data = response.data;
-    if (!data) {
-      console.error("Invalid user data:", data);
-      return null;
-    }
-    return data.result;
-  } catch (error) {
-    console.error("Error fetching user:", error);
-    return null;
-  }
-};
 
 const createPaymentByCOD = async () => {
   if ((isAuthenticated.value = true)) {
     try {
-      const user = await fetchUserById();
       const cartItems = JSON.parse(localStorage.getItem("cart") || "[]");
       const response = await api.post("PaymentAPI/CreatePaymentCOD", {
         orderId: new Date().getTime().toString(),
         userId: localStorage.getItem("userId"),
-        name: user.name,
-        address: user.address,
-        email: user.email,
-        phoneNumber: user.phoneNumber,
+        name: userInfo.value.FullName,
+        address: userInfo.value.address,
+        email: userInfo.value.email,
+        phoneNumber: userInfo.value.phoneNumber,
         totalAmount: Math.round(newTotal.value * 25.475 * 10000).toString(),
         paymentMethod: "COD",
         products: cartItems.map((item) => ({
@@ -325,16 +300,22 @@ const createPaymentByCOD = async () => {
         })),
       });
       const textResponse = await response.data;
-      router.push({
-        name: "CallBack",
-        query: {
-          orderId: textResponse.result.orderId,
-          userId: textResponse.result.userId,
-          amount: newTotal.value.toString(),
-          payType: textResponse.result.paymentMethod,
-          status: textResponse.isSuccess ? "success" : "failed",
-        },
-      });
+      const callbackData = {
+        name: userInfo.value.FullName,
+        address: userInfo.value.address,
+        email: userInfo.value.email,
+        orderId: textResponse.result.orderId,
+        userId: textResponse.result.userId,
+        phoneNumber: userInfo.value.phoneNumber,
+        amount: newTotal.value.toString(),
+        payType: textResponse.result.paymentMethod,
+        orderDate: new Date().toLocaleString(),
+        status: textResponse.isSuccess ? "success" : "failed",
+      };
+
+      sessionStorage.setItem("callbackData", JSON.stringify(callbackData));
+
+      window.location.href = "./CallBack.html";
 
       if (!response.ok) {
         throw new Error(textResponse);
@@ -354,7 +335,7 @@ const createPaymentByCOD = async () => {
           address: userInfo.value.address,
           email: userInfo.value.email,
           phoneNumber: userInfo.value.phoneNumber,
-          orderDate: new Date().toISOString(),
+          orderDate: new Date().toLocaleString(),
           totalAmount: Math.round(newTotal.value * 25.475 * 10000).toString(),
           paymentMethod: "COD",
           products: cartItems.map((item) => ({
@@ -364,16 +345,22 @@ const createPaymentByCOD = async () => {
         }),
       );
       const textResponse = await response.data;
-      router.push({
-        name: "CallBack",
-        query: {
-          orderId: textResponse.result.orderId,
-          userId: textResponse.result.userId,
-          amount: newTotal.value.toString(),
-          payType: textResponse.result.paymentMethod,
-          status: textResponse.isSuccess ? "success" : "failed",
-        },
-      });
+      const callbackData = {
+        name: userInfo.value.FullName,
+        address: userInfo.value.address,
+        email: userInfo.value.email,
+        orderId: textResponse.result.orderId,
+        userId: textResponse.result.userId,
+        phoneNumber: userInfo.value.phoneNumber,
+        amount: newTotal.value.toString(),
+        payType: textResponse.result.paymentMethod,
+        orderDate: new Date().toLocaleString(),
+        status: textResponse.isSuccess ? "success" : "failed",
+      };
+
+      sessionStorage.setItem("callbackData", JSON.stringify(callbackData));
+
+      window.location.href = "./CallBack.html";
 
       if (!response.ok) {
         throw new Error(textResponse);
@@ -387,14 +374,14 @@ const createPaymentByCOD = async () => {
 const createPayment = async () => {
   if ((isAuthenticated.value = true)) {
     try {
-      const user = await fetchUserById();
       const cartItems = JSON.parse(localStorage.getItem("cart") || "[]");
       const response = await api.post("PaymentAPI/CreatePaymentMomo", {
         orderId: new Date().getTime().toString(),
         userId: localStorage.getItem("userId"),
-        name: user.name,
-        address: user.address,
-        email: user.email,
+        name: userInfo.value.FullName,
+        address: userInfo.value.address,
+        email: userInfo.value.email,
+        phoneNumber: userInfo.value.phoneNumber,
         phoneNumber: user.phoneNumber,
         orderDate: new Date().toLocaleString(),
         totalAmount: Math.round(newTotal.value * 25.475 * 10000).toString(),

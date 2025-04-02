@@ -257,34 +257,6 @@ namespace Fish_Manage.Controllers
             }
             return _response;
         }
-        //[Authorize(Roles = "admin")]
-        //[HttpPut("{id}", Name = "UpdateOrder")]
-        //[ProducesResponseType(StatusCodes.Status204NoContent)]
-        //[ProducesResponseType(StatusCodes.Status400BadRequest)]
-        //public async Task<ActionResult<APIResponse>> UpdateOrder(string id, [FromBody] OrderUpdateDTO updateDTO)
-        //{
-        //    try
-        //    {
-        //        if (updateDTO == null || id != updateDTO.OrderId)
-        //        {
-        //            return BadRequest();
-        //        }
-
-        //        Order model = _mapper.Map<Order>(updateDTO);
-
-        //        await _dbOrder.UpdateAsync(model);
-        //        _response.StatusCode = HttpStatusCode.NoContent;
-        //        _response.IsSuccess = true;
-        //        return Ok(_response);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _response.IsSuccess = false;
-        //        _response.ErrorMessages
-        //             = new List<string>() { ex.ToString() };
-        //    }
-        //    return _response;
-        //}
         [HttpPost("GetMoneyPerYear")]
         [Authorize(Roles = "admin")]
         [ProducesResponseType(StatusCodes.Status201Created)]

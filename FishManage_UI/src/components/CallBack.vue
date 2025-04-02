@@ -6,39 +6,78 @@
   </div>
   <div class="payment-status">
     <h1 :class="{ 'text-green-500': isSuccess }">
-      {{ "Payment Successful!" }}
+      {{ isSuccess ? "Payment Successful!" : "Payment Failed!" }}
     </h1>
     <div class="order-details">
-      <p><strong>Order ID:</strong> {{ orderId }}</p>
-      <p><strong>User ID:</strong> {{ userId }}</p>
-      <p><strong>Order Date:</strong> {{ new Date().toLocaleString() }}</p>
-      <p><strong>Total Amount:</strong> {{ amount }}vnd</p>
-      <p><strong>Payment Method:</strong> {{ payType }}</p>
+      <p><strong>Order ID:</strong> {{orderId ||  orderMOMOId }}</p>
+      <p><strong>User Name:</strong> {{  userNameMOMO ||   userName }}</p>
+      <p><strong>Address:</strong> {{ addressMOMO ||  address }}</p>
+      <p><strong>Phone Number:</strong> {{  phoneNumberMOMO ||  phoneNumber}}</p>
+      <p><strong>Email:</strong> {{  emailMOMO || email  }}</p>
+      <p><strong>Order Date:</strong> {{ orderDate || new Date().toLocaleString() }}</p>
+      <p><strong>Total Amount:</strong> {{ amountMOMO ||amount }} VND</p>
+      <p><strong>Payment Method:</strong> {{payTypeMOMO || payType }}</p>
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref, onMounted } from "vue";
+
+// Extracting parameters from URL dynamically
 const params = new URLSearchParams(window.location.search);
-const orderId = params.get("orderId");
-const userId = params.get("requestId") || params.get("userId");
-const amount = params.get("amount");
-const payType = params.get("payType");
-import Swal from "sweetalert2";
-async function handleRedirect() {
-  try {
-    const tokens = await authClient.token.parseFromUrl();
-    authClient.tokenManager.setTokens(tokens);
-    window.location.href = "/";
-  } catch (error) {
-    Swal.fire({
-      icon: "error",
-      title: "An error occurred",
-      text: "Error processing login:",
-      error,
+const orderMOMOId = params.get("orderId") || "";
+const amountMOMO = params.get("amount") || "";
+const payTypeMOMO = params.get("payType") || "";
+const isSuccessMOMO = params.get("status") === "0"; // Assume MOMO success status is "0"
+const userNameMOMO = "Your name payment kept screet throughout MOMO";
+const addressMOMO = "Your address kept screet throughout MOMO";
+const phoneNumberMOMO = "Your phone number kept screet throughout MOM";
+const emailMOMO = "Your email kept kept screet throughout MOM";
+// Reactive state variables
+const orderId = ref("");
+const userName = ref("");
+const address = ref("");
+const phoneNumber = ref("");
+const email = ref("");
+const orderDate = ref("");
+const amount = ref("");
+const payType = ref("");
+const isSuccess = ref(false);
+
+onMounted(() => {
+  const storedData = sessionStorage.getItem("callbackData");
+
+  if (storedData) {
+    const callbackData = JSON.parse(storedData);
+    orderId.value = callbackData.orderId;
+    userName.value = callbackData.name;
+    address.value = callbackData.address;
+    phoneNumber.value = callbackData.phoneNumber;
+    email.value = callbackData.email;
+    orderDate.value = callbackData.orderDate;
+    amount.value = callbackData.amount;
+    payType.value = callbackData.payType;
+    isSuccess.value = callbackData.status === "success";
+
+    console.log("Retrieved Normal Payment Data:", callbackData);
+  } else if (orderMOMOId) {
+    // **MOMO Payment Flow**
+    orderId.value = orderMOMOId;
+    amount.value = amountMOMO;
+    payType.value = payTypeMOMO;
+    isSuccess.value = isSuccessMOMO;
+
+    console.log("Retrieved MOMO Payment Data:", {
+      orderMOMOId,
+      amountMOMO,
+      payTypeMOMO,
+      isSuccessMOMO,
     });
+  } else {
+    console.log("No payment data found.");
   }
-}
+});
 </script>
 
 <style scoped>
@@ -54,5 +93,8 @@ async function handleRedirect() {
 .order-details {
   margin-top: 20px;
   text-align: left;
+}
+.text-green-500 {
+  color: green;
 }
 </style>
