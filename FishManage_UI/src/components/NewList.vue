@@ -36,17 +36,19 @@ export default {
   setup() {
     const newsData = ref([]);
     const startIndex = ref(0);
-    const itemsPerPage = 7;
+    const itemsPerPage = 6;
 
     const fetchNews = async () => {
       try {
         const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1); 
-        const formattedDate = yesterday.toISOString().split("T")[0]; 
-
+        yesterday.setDate(yesterday.getDate() - 1);
+        const formattedDate = yesterday.toISOString().split("T")[0];
         const response = await fetch(
-          `https://newsapi.org/v2/everything?q=Apple&from=${formattedDate}&apiKey=bd58ad8404154d16a3b28813ff007938`,
+          `https://newsapi.org/v2/everything?q=Fish&from=${formattedDate}&apiKey=${import.meta.env.VITE_NEWS_API_KEY}`,
         );
+        // const response = await fetch(
+        //   `https://newsapi.org/v2/everything?q=Apple&from=${formattedDate}&apiKey=bd58ad8404154d16a3b28813ff007938`,
+        // );
 
         const data = await response.json();
         if (data.articles) {

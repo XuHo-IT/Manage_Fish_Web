@@ -18,8 +18,7 @@
               <i class="fa fa-facebook-official"></i>
               Facebook
             </a>
-
-            <a href="#" class="btn-google m-b-20" @click="socialLoginGoogle('google')">
+            <a href="#" class="btn-google m-b-20 " @click="socialLoginGoogle('google')">
               <img src="/Login/images/icons/icon-google.png" alt="GOOGLE" />
               Google
             </a>
@@ -446,11 +445,20 @@ const handleRegister = async () => {
         "Content-Type": "multipart/form-data",
       },
     });
-    localStorage.setItem("token", token);
-    localStorage.setItem("role", role);
-    localStorage.setItem("userId", user.id);
-    window.location.href = "https://localhost:5173/";
-    clearForm();
+    if (response.data.isSuccess && response.data.result) {
+      const { token, user } = response.data.result;
+      const role = user?.role?.toLowerCase() || "";
+
+      if (!token) {
+        throw new Error("Token is missing from response");
+      }
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", role);
+      localStorage.setItem("userId", user.id);
+      window.history.pushState({}, "", `../`);
+      closeModal();
+      window.location.reload();
+    }
   } catch (error) {
     Swal.fire({
       icon: "error",

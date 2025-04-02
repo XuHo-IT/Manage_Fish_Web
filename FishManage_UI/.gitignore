@@ -32,6 +32,6 @@ coverage
 model.tar.gz
 
 cert
-okta.env
+.env
 appsetting.json
 Fish_Manage.csproj
