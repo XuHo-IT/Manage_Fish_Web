@@ -33,5 +33,5 @@ model.tar.gz
 
 cert
 .env
-appsetting.json
+appsettings.json
 Fish_Manage.csproj
