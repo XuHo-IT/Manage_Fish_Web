@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "D:\\CSharp_Projects\\Fish_Manage\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{5AFA2634-BDA6-488F-A3B5-293F81C8E14C}|Fish_Manage\\Fish_Manage.csproj|d:\\csharp_projects\\fish_manage\\fish_manage\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5AFA2634-BDA6-488F-A3B5-293F81C8E14C}|Fish_Manage\\Fish_Manage.csproj|solutionrelative:fish_manage\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{5AFA2634-BDA6-488F-A3B5-293F81C8E14C}|Fish_Manage\\Fish_Manage.csproj|d:\\csharp_projects\\fish_manage\\fish_manage\\controllers\\aibotapicotroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5AFA2634-BDA6-488F-A3B5-293F81C8E14C}|Fish_Manage\\Fish_Manage.csproj|solutionrelative:fish_manage\\controllers\\aibotapicotroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -31,10 +35,6 @@
       "RelativeMoniker": "D:0:0:{5AFA2634-BDA6-488F-A3B5-293F81C8E14C}|Fish_Manage\\Fish_Manage.csproj|solutionrelative:fish_manage\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{5AFA2634-BDA6-488F-A3B5-293F81C8E14C}|Fish_Manage\\Fish_Manage.csproj|d:\\csharp_projects\\fish_manage\\fish_manage\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5AFA2634-BDA6-488F-A3B5-293F81C8E14C}|Fish_Manage\\Fish_Manage.csproj|solutionrelative:fish_manage\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{5AFA2634-BDA6-488F-A3B5-293F81C8E14C}|Fish_Manage\\Fish_Manage.csproj|d:\\csharp_projects\\fish_manage\\fish_manage\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5AFA2634-BDA6-488F-A3B5-293F81C8E14C}|Fish_Manage\\Fish_Manage.csproj|solutionrelative:fish_manage\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
@@ -46,7 +46,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 12,
+          "SelectedChildIndex": 13,
           "Children": [
             {
               "$type": "Bookmark",
@@ -98,7 +98,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "AIBotAPICotroller.cs",
               "DocumentMoniker": "D:\\CSharp_Projects\\Fish_Manage\\Fish_Manage\\Controllers\\AIBotAPICotroller.cs",
               "RelativeDocumentMoniker": "Fish_Manage\\Controllers\\AIBotAPICotroller.cs",
@@ -111,19 +111,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 0,
               "Title": "UserController.cs",
               "DocumentMoniker": "D:\\CSharp_Projects\\Fish_Manage\\Fish_Manage\\Controllers\\UserController.cs",
               "RelativeDocumentMoniker": "Fish_Manage\\Controllers\\UserController.cs",
               "ToolTip": "D:\\CSharp_Projects\\Fish_Manage\\Fish_Manage\\Controllers\\UserController.cs",
               "RelativeToolTip": "Fish_Manage\\Controllers\\UserController.cs",
-              "ViewState": "AQIAACsAAAAAAAAAAAAQwEAAAAAtAAAA",
+              "ViewState": "AQIAAI0BAAAAAAAAAAA2wJ8BAAAoAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-01T06:39:22.593Z"
+              "WhenOpened": "2025-04-01T06:39:22.593Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "CouponModelAPIController.cs",
               "DocumentMoniker": "D:\\CSharp_Projects\\Fish_Manage\\Fish_Manage\\Controllers\\CouponModelAPIController.cs",
               "RelativeDocumentMoniker": "Fish_Manage\\Controllers\\CouponModelAPIController.cs",
@@ -131,12 +132,11 @@
               "RelativeToolTip": "Fish_Manage\\Controllers\\CouponModelAPIController.cs",
               "ViewState": "AQIAALUAAAAAAAAAAAAwwAAAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-01T07:02:59.28Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-04-01T07:02:59.28Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "launchSettings.json",
               "DocumentMoniker": "D:\\CSharp_Projects\\Fish_Manage\\Fish_Manage\\Properties\\launchSettings.json",
               "RelativeDocumentMoniker": "Fish_Manage\\Properties\\launchSettings.json",
@@ -144,8 +144,7 @@
               "RelativeToolTip": "Fish_Manage\\Properties\\launchSettings.json",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAAsAAAANAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-04-01T06:36:47.849Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-04-01T06:36:47.849Z"
             },
             {
               "$type": "Document",
@@ -157,11 +156,12 @@
               "RelativeToolTip": "Fish_Manage\\Program.cs",
               "ViewState": "AQIAAEsAAAAAAAAAAAAAAE4AAAA2AAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-01T06:35:20.084Z"
+              "WhenOpened": "2025-04-01T06:35:20.084Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "UserRepository.cs",
               "DocumentMoniker": "D:\\CSharp_Projects\\Fish_Manage\\Fish_Manage\\Repository\\UserRepository.cs",
               "RelativeDocumentMoniker": "Fish_Manage\\Repository\\UserRepository.cs",
@@ -174,7 +174,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "FishProductAPIController.cs",
               "DocumentMoniker": "D:\\CSharp_Projects\\Fish_Manage\\Fish_Manage\\Controllers\\FishProductAPIController.cs",
               "RelativeDocumentMoniker": "Fish_Manage\\Controllers\\FishProductAPIController.cs",
@@ -187,7 +187,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 7,
               "Title": "appsettings.json",
               "DocumentMoniker": "D:\\CSharp_Projects\\Fish_Manage\\Fish_Manage\\appsettings.json",
               "RelativeDocumentMoniker": "Fish_Manage\\appsettings.json",
@@ -195,12 +195,11 @@
               "RelativeToolTip": "Fish_Manage\\appsettings.json",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAA8AAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-04-01T06:36:38.673Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-04-01T06:36:38.673Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "FishOrderAPIController.cs",
               "DocumentMoniker": "D:\\CSharp_Projects\\Fish_Manage\\Fish_Manage\\Controllers\\FishOrderAPIController.cs",
               "RelativeDocumentMoniker": "Fish_Manage\\Controllers\\FishOrderAPIController.cs",

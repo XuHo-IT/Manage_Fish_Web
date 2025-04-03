@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Fish_Manage")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bfca11055451d658ded0145522bb6efadfd9a6d5")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d056d1ca56135af55901c3cebfa70094953b9c9d")]
 [assembly: System.Reflection.AssemblyProductAttribute("Fish_Manage")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Fish_Manage")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
